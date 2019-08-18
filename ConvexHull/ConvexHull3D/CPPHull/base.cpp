@@ -95,7 +95,9 @@ triangle::triangle(size_t i, size_t v1, size_t v2, size_t v3) {
 }
 
 bool triangle::isValid() {
-	return index > -1 && a > -1 && b > -1 && c > -1;
+	// Normally we would check if the numbers are > -1. but because size_t is unsigned. -1 causes integer underflow
+	// resulting in a huge number whenever we assign -1 to a size_t type. so here we check the opposite i.e. <.
+	return index < -1 && a < -1 && b < -1 && c < -1;
 }
 
 void triangle::flip() {

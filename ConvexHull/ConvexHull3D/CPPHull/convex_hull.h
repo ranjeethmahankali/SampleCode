@@ -31,7 +31,7 @@ private:
 	size_t farthestPoint(size_t iTri, triangle &triangle);
 	double triangleSolidAngle(triangle tri, vec3 pt);
 	void updateInteriorPoints();
-	bool isInsideHull(vec3 pt);
+	bool isInsideHull(vec3 pt, size_t index);
 	void createInitialSimplex(size_t &triIndex);
 
 public:

@@ -84,7 +84,7 @@ void convex_hull::setTriangle(triangle tri) {
 
 	for (size_t ei = 0; ei < 3; ei++)
 	{
-		_edgeFaceMap[ei].insert(tri.index);
+		_edgeFaceMap[eis[ei]].insert(tri.index);
 	}
 }
 
@@ -145,13 +145,20 @@ size_t convex_hull::farthestPoint(size_t iTri, triangle &tri) {
 	return farthest;
 }
 
-bool convex_hull::isInsideHull(vec3 pt) {
+bool convex_hull::isInsideHull(vec3 pt, size_t ptIndex) {
 	triangle tri;
-	double sign, angSum = 0;
+	double sign, angSum = 0, dist;
 	auto iter = _triangles.begin();
 	while (iter != _triangles.end())
 	{
-		sign = isTriangleFacing(iter->first, pt, tri) ? 1 : -1;
+		if (ptIndex == iter->second.a || ptIndex == iter->second.b || ptIndex == iter->second.c) {
+			return true;
+		}
+		dist = trianglePlaneDist(iter->first, pt, tri);
+		if (std::abs(dist) < 1e-10) {
+			return true;
+		}
+		sign = dist > 0 ? 1 : -1;
 		angSum += sign * triangleSolidAngle(tri, pt);
 		iter++;
 	}
@@ -163,7 +170,7 @@ void convex_hull::updateInteriorPoints() {
 	std::vector<size_t> remove;
 	auto iter1 = _outsidePts.begin();
 	while (iter1 != _outsidePts.end()) {
-		if (isInsideHull(_pts[*iter1])) {
+		if (isInsideHull(_pts[*iter1], *iter1)) {
 			remove.push_back(*iter1);
 		}
 		iter1++;
@@ -173,6 +180,7 @@ void convex_hull::updateInteriorPoints() {
 	while (iter2 != remove.end())
 	{
 		_outsidePts.erase(*iter2);
+		iter2++;
 	}
 }
 
