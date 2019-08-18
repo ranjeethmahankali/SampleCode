@@ -6,6 +6,7 @@
 #include <unordered_set>
 #include <unordered_map>
 #include <algorithm>
+
 #define PINVOKE extern "C" __declspec(dllexport)
 #define doubleMaxValue std::numeric_limits<double>::max()
 #define doubleMinValue std::numeric_limits<double>::min()
@@ -25,12 +26,18 @@ struct vec3 {
 
 	vec3 operator*(double s);
 	vec3 operator/(double s);
+	bool operator==(vec3 v);
+	bool operator!=(vec3 v);
 
 	vec3 operator-();
 
 	double lenSq();
 	double len();
 	void copyTo(double* dest, size_t &pos);
+	bool isZero();
+	bool isValid();
+	vec3 unit();
+
 	static double solidAngle(vec3 a, vec3 b, vec3 c);
 };
 
@@ -42,4 +49,8 @@ struct triangle {
 	
 	triangle();
 	triangle(size_t i, size_t v1, size_t v2, size_t v3);
+
+	bool isValid();
+	void flip();
+	triangle flipped();
 };
