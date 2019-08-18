@@ -61,9 +61,7 @@ double vec3::solidAngle(vec3 a, vec3 b, vec3 c) {
 
 triangle::triangle() : triangle::triangle(-1, -1, -1, -1) { }
 
-triangle::triangle(size_t i, size_t v1, size_t v2, size_t v3)
-	: connected {NULL, NULL, NULL}
-{
+triangle::triangle(size_t i, size_t v1, size_t v2, size_t v3) {
 	index = i;
 	a = v1;
 	b = v2;

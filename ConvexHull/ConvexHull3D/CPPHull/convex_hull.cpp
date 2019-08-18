@@ -57,5 +57,5 @@ PINVOKE void Unsafe_ComputeHull(double* pts, size_t nPoints,
 
 void convex_hull::compute() {
 	// throw "Not implemented yet.";
-	_triangles.push_back(triangle(0, 0, 1, 2));
+	_triangles.push_back(triangle(0, 0, 1, 3));
 }

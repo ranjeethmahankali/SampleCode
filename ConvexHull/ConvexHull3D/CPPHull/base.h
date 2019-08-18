@@ -3,6 +3,9 @@
 #include <limits>
 #include <cstddef>
 #include <vector>
+#include <unordered_set>
+#include <unordered_map>
+#include <algorithm>
 #define PINVOKE extern "C" __declspec(dllexport)
 #define doubleMaxValue std::numeric_limits<double>::max()
 #define doubleMinValue std::numeric_limits<double>::min()
@@ -36,7 +39,6 @@ class convex_hull;
 struct triangle {
 	size_t index;
 	size_t a, b, c;
-	triangle* connected[3];
 	
 	triangle();
 	triangle(size_t i, size_t v1, size_t v2, size_t v3);
