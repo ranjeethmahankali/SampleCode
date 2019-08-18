@@ -74,19 +74,22 @@ private:
 			throw "The combinations cannot contain more elements than the total.";
 		}
 
-		std::vector<T*> com2;
-		util::combinationsInternal(arr, n - 1, total - 1, 1, com2);
-		for (size_t i = 0; i < com2.size(); i++)
+		for (size_t k = curPos; k < total; k++)
 		{
-			T* com = new T[n];
-			com[0] = arr[curPos];
-			for (size_t j = 0; j < n - 1; i++)
+			std::vector<T*> com2;
+			util::combinationsInternal(arr, n - 1, total, k + 1, com2);
+			for (size_t i = 0; i < com2.size(); i++)
 			{
-				com[j + 1] = com2[i][j];
-			}
+				T* com = new T[n];
+				com[0] = arr[k];
+				for (size_t j = 0; j < n - 1; j++)
+				{
+					com[j + 1] = com2[i][j];
+				}
 
-			delete com2[i];
-			combs.push_back(com);
+				delete com2[i];
+				combs.push_back(com);
+			}
 		}
 	}
 public:

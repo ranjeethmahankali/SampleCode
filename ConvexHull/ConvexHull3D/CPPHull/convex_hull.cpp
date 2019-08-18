@@ -122,6 +122,12 @@ bool convex_hull::isTriangleFacing(size_t iTri, vec3 pt, triangle &tri) {
 		false;
 }
 
+bool convex_hull::isTriangleFacing(triangle tri, vec3 pt) {
+	vec3 normal = triangleNormal(tri);
+	return normal.isValid() ? ((normal * (pt - _pts[tri.a])) > 0) :
+		false;
+}
+
 double convex_hull::triangleSolidAngle(triangle tri, vec3 pt) {
 	return vec3::solidAngle(_pts[tri.a] - pt, _pts[tri.b] - pt, _pts[tri.c] - pt);
 }
@@ -184,7 +190,7 @@ PINVOKE void Unsafe_ComputeHull(double* pts, size_t nPoints,
 	hull.getAllTriangles(triangles);
 }
 
-void convex_hull::createInitialSimplex() {
+void convex_hull::createInitialSimplex(size_t &triI) {
 	size_t bounds[6];
 	double extremes[6];
 	for (size_t ei = 0; ei < 6; ei++)
@@ -223,7 +229,7 @@ void convex_hull::createInitialSimplex() {
 		if (vol > maxVol) {
 			for (size_t j = 0; j < 4; j++)
 			{
-				best[i] = com[i];
+				best[j] = com[j];
 			}
 			maxVol = vol;
 		}
@@ -233,12 +239,26 @@ void convex_hull::createInitialSimplex() {
 	vec3 center = (_pts[best[0]] + _pts[best[1]] + _pts[best[2]] + 
 		_pts[best[3]]) / 4;
 
-	throw "This is not implemented yet";
+	triangle simplex[4]{
+		triangle(triI++, best[0], best[1], best[2]),
+		triangle(triI++, best[0], best[2], best[3]),
+		triangle(triI++, best[1], best[2], best[3]),
+		triangle(triI++, best[0], best[1], best[3])
+	};
+
+	for (size_t i = 0; i < 4; i++)
+	{
+		if (isTriangleFacing(simplex[i], center)) {
+			simplex[i].flip();
+		}
+		setTriangle(simplex[i]);
+	}
 }
 
 void convex_hull::compute() {
 	size_t curTriIndex = 0;
-	createInitialSimplex();
+	createInitialSimplex(curTriIndex);
+	updateInteriorPoints();
 	std::queue<size_t> gQue = std::queue<size_t>();
 	auto iter = _triangles.begin();
 	while (iter != _triangles.end()) {
@@ -297,5 +317,6 @@ void convex_hull::compute() {
 			setTriangle(newTri);
 			hIter++;
 		}
+		updateInteriorPoints();
 	}
 }

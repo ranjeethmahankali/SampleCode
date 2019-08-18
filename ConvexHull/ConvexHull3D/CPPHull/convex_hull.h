@@ -24,6 +24,7 @@ private:
 	triangle popTriangle(size_t index, size_t edgeIndices[3],
 		size_t adjTriangles[3]);
 	bool isTriangleFacing(size_t iTri, vec3 pt, triangle &tri);
+	bool isTriangleFacing(triangle tri, vec3 pt);
 	vec3 triangleNormal(size_t iTri, triangle &tri);
 	vec3 triangleNormal(triangle tri);
 	double trianglePlaneDist(size_t iTri, vec3 pt, triangle &tri);
@@ -31,7 +32,7 @@ private:
 	double triangleSolidAngle(triangle tri, vec3 pt);
 	void updateInteriorPoints();
 	bool isInsideHull(vec3 pt);
-	void createInitialSimplex();
+	void createInitialSimplex(size_t &triIndex);
 
 public:
 	convex_hull(double* pts, size_t nPts);
