@@ -185,6 +185,54 @@ PINVOKE void Unsafe_ComputeHull(double* pts, size_t nPoints,
 }
 
 void convex_hull::createInitialSimplex() {
+	size_t bounds[6];
+	double extremes[6];
+	for (size_t ei = 0; ei < 6; ei++)
+	{
+		extremes[ei] = ei % 2 == 0 ? doubleMaxValue : doubleMinValue;
+		bounds[ei] = -1;
+	}
+
+	double coords[3];
+	for (size_t pi = 0; pi < _nPts; pi++)
+	{
+		_pts[pi].copyTo(coords);
+		for (size_t ei = 0; ei < 6; ei++)
+		{
+			if (ei % 2 == 0 && extremes[ei] > coords[ei / 2]) {
+				extremes[ei] = coords[ei / 2];
+				bounds[ei] = pi;
+			}
+			else if (ei % 2 == 1 && extremes[ei] < coords[ei / 2]) {
+				extremes[ei] = coords[ei / 2];
+				bounds[ei] = pi;
+			}
+		}
+	}
+
+	std::vector<size_t*> combs;
+	util::combinations<size_t>(bounds, 4, 6, combs);
+
+	size_t best[4]{-1, -1, -1, -1};
+	double maxVol = doubleMinValue, vol;
+	size_t* com;
+	for (size_t i = 0; i < combs.size(); i++)
+	{
+		com = combs[i];
+		vol = util::tetVolume(_pts[com[0]], _pts[com[1]], _pts[com[2]], _pts[com[3]]);
+		if (vol > maxVol) {
+			for (size_t j = 0; j < 4; j++)
+			{
+				best[i] = com[i];
+			}
+			maxVol = vol;
+		}
+		delete combs[i];
+	}
+
+	vec3 center = (_pts[best[0]] + _pts[best[1]] + _pts[best[2]] + 
+		_pts[best[3]]) / 4;
+
 	throw "This is not implemented yet";
 }
 

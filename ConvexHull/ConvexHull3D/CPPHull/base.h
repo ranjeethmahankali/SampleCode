@@ -34,14 +34,13 @@ struct vec3 {
 	double lenSq();
 	double len();
 	void copyTo(double* dest, size_t &pos);
+	void copyTo(double dest[3]);
 	bool isZero();
 	bool isValid();
 	vec3 unit();
 
 	static double solidAngle(vec3 a, vec3 b, vec3 c);
 };
-
-class convex_hull;
 
 struct triangle {
 	size_t index;
@@ -53,4 +52,53 @@ struct triangle {
 	bool isValid();
 	void flip();
 	triangle flipped();
+};
+
+class util {
+private:
+	// Default implementations of the template functions needs to be
+	// in the header file.
+	template<typename T>
+	static void combinationsInternal(T* arr, size_t n, size_t total, 
+		size_t curPos, std::vector<T*>& combs) {
+
+		if (n == 0) {
+			combs.push_back(new T[0]);
+			return;
+		}
+		else if (n == total) {
+			combs.push_back(arr);
+			return;
+		}
+		else if (n > total) {
+			throw "The combinations cannot contain more elements than the total.";
+		}
+
+		std::vector<T*> com2;
+		util::combinationsInternal(arr, n - 1, total - 1, 1, com2);
+		for (size_t i = 0; i < com2.size(); i++)
+		{
+			T* com = new T[n];
+			com[0] = arr[curPos];
+			for (size_t j = 0; j < n - 1; i++)
+			{
+				com[j + 1] = com2[i][j];
+			}
+
+			delete com2[i];
+			combs.push_back(com);
+		}
+	}
+public:
+	// Default implementations of the template functions needs to be
+	// in the header file.
+	template<typename T>
+	static void combinations(T* arr, size_t n, size_t total, 
+		std::vector<T*>& combs) {
+		
+		util::combinationsInternal(arr, n, total, 0, combs);
+	}
+
+	static double tetVolume(vec3 a, vec3 b, vec3 c, vec3 d);
+	static size_t factorial(size_t n);
 };

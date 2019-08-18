@@ -62,6 +62,12 @@ void vec3::copyTo(double* dest, size_t &pos) {
 	dest[pos++] = z;
 }
 
+void vec3::copyTo(double dest[3]) {
+	dest[0] = x;
+	dest[1] = y;
+	dest[2] = z;
+}
+
 double vec3::solidAngle(vec3 a, vec3 b, vec3 c) {
 	return abs(((a ^ b) * c) / (a.len() * b.len() * c.len() + (a * b) * c.len() +
 		(b * c) * a.len() + (c * a) * c.len()));
@@ -101,4 +107,12 @@ void triangle::flip() {
 
 triangle triangle::flipped() {
 	return triangle(index, a, c, b);
+}
+
+size_t util::factorial(size_t n) {
+	return n == 1 ? n : n * util::factorial(n - 1);
+}
+
+double util::tetVolume(vec3 a, vec3 b, vec3 c, vec3 d) {
+	return std::abs(((b - a) ^ (c - a)) * (d - a)) / 6;
 }
