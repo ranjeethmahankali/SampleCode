@@ -58,3 +58,14 @@ double vec3::solidAngle(vec3 a, vec3 b, vec3 c) {
 	return abs(((a ^ b) * c) / (a.len() * b.len() * c.len() + (a * b) * c.len() +
 		(b * c) * a.len() + (c * a) * c.len()));
 }
+
+triangle::triangle() : triangle::triangle(-1, -1, -1, -1) { }
+
+triangle::triangle(size_t i, size_t v1, size_t v2, size_t v3)
+	: connected {NULL, NULL, NULL}
+{
+	index = i;
+	a = v1;
+	b = v2;
+	c = v3;
+}

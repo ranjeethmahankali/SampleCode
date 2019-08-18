@@ -16,6 +16,10 @@ namespace ConvexHull3D
 
         public static Mesh Create(List<Point3d> points)
         {
+            if (points.Count < 4)
+            {
+                return null;
+            }
             double[] coords = points.SelectMany(pt => new double[] { pt.X, pt.Y, pt.Z }).ToArray();
             IntPtr trPtr = IntPtr.Zero;
             int nTriangles = 0;

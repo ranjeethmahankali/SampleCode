@@ -34,14 +34,10 @@ struct vec3 {
 class convex_hull;
 
 struct triangle {
-	convex_hull* hull;
 	size_t index;
 	size_t a, b, c;
 	triangle* connected[3];
-
-	vec3 getA();
-	vec3 getB();
-	vec3 getC();
-
-	void getAllVerts(vec3 verts[3]);
+	
+	triangle();
+	triangle(size_t i, size_t v1, size_t v2, size_t v3);
 };

@@ -1,23 +1,5 @@
 #include "convex_hull.h"
 
-vec3 triangle::getA() {
-	return hull->getPt(a);
-}
-
-vec3 triangle::getB() {
-	return hull->getPt(b);
-}
-
-vec3 triangle::getC() {
-	return hull->getPt(c);
-}
-
-void triangle::getAllVerts(vec3 verts[3]) {
-	verts[0] = getA();
-	verts[1] = getB();
-	verts[2] = getC();
-}
-
 convex_hull::convex_hull(double* pts, size_t nPts) {
 	_pts = new vec3[nPts];
 	for (size_t i = 0; i < nPts; i++)
@@ -74,5 +56,6 @@ PINVOKE void Unsafe_ComputeHull(double* pts, size_t nPoints,
 }
 
 void convex_hull::compute() {
-	throw "Not implemented yet.";
+	// throw "Not implemented yet.";
+	_triangles.push_back(triangle(0, 0, 1, 2));
 }

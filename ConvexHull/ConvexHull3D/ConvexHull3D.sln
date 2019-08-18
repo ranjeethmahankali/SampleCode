@@ -4,6 +4,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 16.0.29209.62
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConvexHull3D", "ConvexHull3D\ConvexHull3D.csproj", "{6FE6803E-3590-4DEF-94D5-785E66F1A2C0}"
+	ProjectSection(ProjectDependencies) = postProject
+		{6FA29F2D-9310-4C95-887E-DB8F71A2348D} = {6FA29F2D-9310-4C95-887E-DB8F71A2348D}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CPPHull", "CPPHull\CPPHull.vcxproj", "{6FA29F2D-9310-4C95-887E-DB8F71A2348D}"
 EndProject
