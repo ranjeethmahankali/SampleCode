@@ -48,21 +48,21 @@ bool vec3::operator!=(vec3 v) {
 	return x != v.x || y != v.y || z != v.z;
 }
 
-double vec3::lenSq() {
+double vec3::lenSq() const {
 	return x * x + y * y + z * z;
 }
 
-double vec3::len() {
+double vec3::len() const  {
 	return sqrt(lenSq());
 }
 
-void vec3::copyTo(double* dest, size_t &pos) {
+void vec3::copyTo(double* dest, size_t &pos) const  {
 	dest[pos++] = x;
 	dest[pos++] = y;
 	dest[pos++] = z;
 }
 
-void vec3::copyTo(double dest[3]) {
+void vec3::copyTo(double dest[3]) const {
 	dest[0] = x;
 	dest[1] = y;
 	dest[2] = z;
@@ -73,15 +73,15 @@ double vec3::solidAngle(vec3 a, vec3 b, vec3 c) {
 		(b * c) * a.len() + (c * a) * c.len()));
 }
 
-bool vec3::isZero() {
+bool vec3::isZero() const {
 	return x == 0 && y == 0 && z == 0;
 }
 
-bool vec3::isValid() {
+bool vec3::isValid() const {
 	return x != vec3::unset.x && y != vec3::unset.y && z != vec3::unset.z;
 }
 
-vec3 vec3::unit() {
+vec3 vec3::unit() const {
 	return isZero() ? zero : vec3(x, y, z) / len();
 }
 
@@ -94,7 +94,7 @@ triangle::triangle(size_t i, size_t v1, size_t v2, size_t v3) {
 	c = v3;
 }
 
-bool triangle::isValid() {
+bool triangle::isValid() const {
 	// Normally we would check if the numbers are > -1. but because size_t is unsigned. -1 causes integer underflow
 	// resulting in a huge number whenever we assign -1 to a size_t type. so here we check the opposite i.e. <.
 	return index < -1 && a < -1 && b < -1 && c < -1;
@@ -107,7 +107,7 @@ void triangle::flip() {
 	c = temp;
 }
 
-triangle triangle::flipped() {
+triangle triangle::flipped() const {
 	return triangle(index, a, c, b);
 }
 

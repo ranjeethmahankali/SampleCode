@@ -31,11 +31,11 @@ convex_hull::~convex_hull() {
 	delete _pts;
 }
 
-vec3 convex_hull::getPt(size_t index) {
+vec3 convex_hull::getPt(size_t index) const {
 	return (index < 0 || index > _nPts) ? vec3::unset : _pts[index];
 }
 
-size_t convex_hull::numTriangles() {
+size_t convex_hull::numTriangles() const {
 	return _triangles.size();
 }
 
@@ -62,7 +62,7 @@ void convex_hull::getAllTriangles(int* triangles) {
 	}
 }
 
-double convex_hull::trianglePlaneDist(size_t iTri, vec3 pt, triangle &tri) {
+double convex_hull::trianglePlaneDist(size_t iTri, vec3 pt, triangle &tri){
 	vec3 normal = triangleNormal(iTri, tri);
 	if (!tri.isValid()) {
 		return doubleMinValue;
@@ -71,7 +71,7 @@ double convex_hull::trianglePlaneDist(size_t iTri, vec3 pt, triangle &tri) {
 	return (pt - _pts[tri.a]) * normal;
 }
 
-void convex_hull::getEdgeIndices(triangle tri, size_t indices[3]) {
+void convex_hull::getEdgeIndices(triangle tri, size_t indices[3]) const {
 	indices[0] = std::min(tri.a, tri.b) * _nPts + std::max(tri.a, tri.b);
 	indices[1] = std::min(tri.b, tri.c) * _nPts + std::max(tri.b, tri.c);
 	indices[2] = std::min(tri.c, tri.a) * _nPts + std::max(tri.c, tri.a);
@@ -112,7 +112,7 @@ vec3 convex_hull::triangleNormal(size_t iTri, triangle &tri) {
 	return tri.isValid() ? triangleNormal(tri) : vec3::unset;
 }
 
-vec3 convex_hull::triangleNormal(triangle tri) {
+vec3 convex_hull::triangleNormal(triangle tri) const {
 	return ((_pts[tri.b] - _pts[tri.a]) ^ (_pts[tri.c] - _pts[tri.a])).unit();
 }
 
@@ -122,13 +122,13 @@ bool convex_hull::isTriangleFacing(size_t iTri, vec3 pt, triangle &tri) {
 		false;
 }
 
-bool convex_hull::isTriangleFacing(triangle tri, vec3 pt) {
+bool convex_hull::isTriangleFacing(triangle tri, vec3 pt) const {
 	vec3 normal = triangleNormal(tri);
 	return normal.isValid() ? ((normal * (pt - _pts[tri.a])) > 0) :
 		false;
 }
 
-double convex_hull::triangleSolidAngle(triangle tri, vec3 pt) {
+double convex_hull::triangleSolidAngle(triangle tri, vec3 pt) const {
 	return vec3::solidAngle(_pts[tri.a] - pt, _pts[tri.b] - pt, _pts[tri.c] - pt);
 }
 
@@ -184,7 +184,7 @@ void convex_hull::updateInteriorPoints() {
 	}
 }
 
-void convex_hull::getVertIndicesForEdge(size_t edgeI, size_t& v1, size_t& v2) {
+void convex_hull::getVertIndicesForEdge(size_t edgeI, size_t& v1, size_t& v2) const {
 	v2 = edgeI % _nPts;
 	v1 = (edgeI - v2) / _nPts;
 }

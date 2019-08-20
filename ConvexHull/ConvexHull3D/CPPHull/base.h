@@ -31,13 +31,13 @@ struct vec3 {
 
 	vec3 operator-();
 
-	double lenSq();
-	double len();
-	void copyTo(double* dest, size_t &pos);
-	void copyTo(double dest[3]);
-	bool isZero();
-	bool isValid();
-	vec3 unit();
+	double lenSq() const;
+	double len() const;
+	void copyTo(double* dest, size_t &pos) const;
+	void copyTo(double dest[3]) const;
+	bool isZero() const;
+	bool isValid() const;
+	vec3 unit() const;
 
 	static double solidAngle(vec3 a, vec3 b, vec3 c);
 };
@@ -49,9 +49,9 @@ struct triangle {
 	triangle();
 	triangle(size_t i, size_t v1, size_t v2, size_t v3);
 
-	bool isValid();
+	bool isValid() const;
 	void flip();
-	triangle flipped();
+	triangle flipped() const;
 };
 
 class util {
