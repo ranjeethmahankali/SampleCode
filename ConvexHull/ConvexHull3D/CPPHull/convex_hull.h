@@ -13,7 +13,7 @@ private:
 	std::unordered_set<size_t> _outsidePts;
 	std::unordered_map<size_t, std::unordered_set<size_t>> _edgeFaceMap;
 
-	vec3* _pts;
+	vec3 *_pts, _center;
 	size_t _nPts;
 
 	void compute();
@@ -40,8 +40,7 @@ public:
 
 	vec3 getPt(size_t index) const;
 	size_t numTriangles() const;
-	void getAllTriangles(size_t* triangles);
-	void getAllTriangles(int* triangles);
+	void getAllTriangles(std::vector<int> &indices);
 };
 
 PINVOKE void Unsafe_ComputeHull(double* pts, size_t numPoints,

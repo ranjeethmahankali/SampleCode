@@ -12,6 +12,8 @@ convex_hull::convex_hull(double* pts, size_t nPts) {
 	}
 	_nPts = nPts;
 
+	_center = vec3::average(_pts, _nPts);
+
 	_triangles = std::unordered_map<size_t, triangle>();
 	_insidePts = std::unordered_set<size_t>();
 	_edgeFaceMap = std::unordered_map<size_t, std::unordered_set<size_t>>();
@@ -39,25 +41,17 @@ size_t convex_hull::numTriangles() const {
 	return _triangles.size();
 }
 
-void convex_hull::getAllTriangles(size_t* triangles) {
-	size_t nTriangles = numTriangles();
-	for (size_t i = 0; i < nTriangles; i++)
-	{
-		triangles[3 * i] = _triangles[i].a;
-		triangles[3 * i + 1] = _triangles[i].b;
-		triangles[3 * i + 2] = _triangles[i].c;
-	}
-}
-
-void convex_hull::getAllTriangles(int* triangles) {
+void convex_hull::getAllTriangles(std::vector<int>& indices) {
 	size_t nTriangles = numTriangles();
 	std::unordered_map<size_t, triangle>::iterator iter = _triangles.begin();
 	int i = 0;
 	while(iter != _triangles.end())
 	{
-		triangles[i++] = iter->second.a;
-		triangles[i++] = iter->second.b;
-		triangles[i++] = iter->second.c;
+		if (iter->second.isValid()) {
+			indices.push_back(iter->second.a);
+			indices.push_back(iter->second.b);
+			indices.push_back(iter->second.c);
+		}
 		iter++;
 	}
 }
@@ -193,9 +187,12 @@ PINVOKE void Unsafe_ComputeHull(double* pts, size_t nPoints,
 	int* &triangles, int& nTriangles) {
 
 	convex_hull hull(pts, nPoints);
-	nTriangles = hull.numTriangles();
-	triangles = new int[(size_t)nTriangles * 3];
-	hull.getAllTriangles(triangles);
+	std::vector<int> triIndices = std::vector<int>();
+	hull.getAllTriangles(triIndices);
+	nTriangles = triIndices.size() / 3;
+	triangles = new int[triIndices.size()];
+	std::copy(triIndices.begin(), triIndices.end(), triangles);
+
 }
 
 void convex_hull::createInitialSimplex(size_t &triI) {
@@ -282,6 +279,7 @@ void convex_hull::compute() {
 	std::vector<size_t> horizonIndices = std::vector<size_t>();
 	std::vector<size_t>::iterator hIter;
 	size_t ev1, ev2;
+	vec3 avg;
 	while (!gQue.empty())
 	{
 		iTri = gQue.front();
@@ -315,14 +313,25 @@ void convex_hull::compute() {
 		}
 
 		hIter = horizonIndices.begin();
+		avg = vec3(0, 0, 0);
+		while (hIter != horizonIndices.end()) {
+			getVertIndicesForEdge(*hIter, ev1, ev2);
+			avg += getPt(ev1);
+			avg += getPt(ev2);
+			hIter++;
+		}
+		avg /= 2 * horizonIndices.size();
+
+		hIter = horizonIndices.begin();
 		while (hIter != horizonIndices.end())
 		{
 			getVertIndicesForEdge(*hIter, ev1, ev2);
 			newTri = triangle(curTriIndex++, fpi, ev1, ev2);
-			if (triangleNormal(newTri) * normal < 0) {
+			if (((getPt(ev1) - fpt) ^ (getPt(ev2) - fpt)) * (avg - fpt) > 0) {
 				newTri.flip();
 			}
 			setTriangle(newTri);
+			gQue.push(newTri.index);
 			hIter++;
 		}
 		updateInteriorPoints();

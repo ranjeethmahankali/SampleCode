@@ -14,6 +14,9 @@ namespace ConvexHull3D
         private static extern void Unsafe_ComputeHull([MarshalAs(UnmanagedType.LPArray)] double[] ptCoords, ulong nPts, 
             ref IntPtr triangles, ref int nTriangles);
 
+        [DllImport("CPPHull.dll", CallingConvention = CallingConvention.Cdecl)]
+        private static extern void Unsafe_ReleaseIntArray(IntPtr ptr);
+
         public static Mesh Create(List<Point3d> points)
         {
             if (points.Count < 4)
@@ -26,6 +29,7 @@ namespace ConvexHull3D
             Unsafe_ComputeHull(coords, (ulong)points.Count, ref trPtr, ref nTriangles);
             int[] triangleIndices = new int[nTriangles * 3];
             Marshal.Copy(trPtr, triangleIndices, 0, (int)nTriangles * 3);
+            Unsafe_ReleaseIntArray(trPtr);
 
             Mesh mesh = new Mesh();
             mesh.Vertices.AddVertices(points);
@@ -33,6 +37,8 @@ namespace ConvexHull3D
             {
                 mesh.Faces.AddFace(triangleIndices[3 * i], triangleIndices[3 * i + 1], triangleIndices[3 * i + 2]);
             }
+
+            mesh.IsValidWithLog(out string log);
 
             // TODO: Compact the mesh to remove points not in the hull.
             return mesh;

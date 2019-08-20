@@ -28,6 +28,10 @@ struct vec3 {
 	vec3 operator/(double s);
 	bool operator==(vec3 v);
 	bool operator!=(vec3 v);
+	vec3 operator+=(vec3 v);
+	vec3 operator-=(vec3 v);
+	vec3 operator/=(double s);
+	vec3 operator*=(double s);
 
 	vec3 operator-();
 
@@ -40,6 +44,8 @@ struct vec3 {
 	vec3 unit() const;
 
 	static double solidAngle(vec3 a, vec3 b, vec3 c);
+	static vec3 sum(vec3* vecs, size_t nVecs);
+	static vec3 average(vec3* vecs, size_t nVecs);
 };
 
 struct triangle {
@@ -105,3 +111,5 @@ public:
 	static double tetVolume(vec3 a, vec3 b, vec3 c, vec3 d);
 	static size_t factorial(size_t n);
 };
+
+PINVOKE void Unsafe_ReleaseIntArray(int* arr);

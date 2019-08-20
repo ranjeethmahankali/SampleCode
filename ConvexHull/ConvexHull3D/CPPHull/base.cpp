@@ -48,6 +48,34 @@ bool vec3::operator!=(vec3 v) {
 	return x != v.x || y != v.y || z != v.z;
 }
 
+vec3 vec3::operator+=(vec3 v) {
+	x += v.x;
+	y += v.y;
+	z += v.z;
+	return *this;
+}
+
+vec3 vec3::operator-= (vec3 v) {
+	x -= v.y;
+	y -= v.y;
+	z -= v.z;
+	return *this;
+}
+
+vec3 vec3::operator *=(double s) {
+	x *= s;
+	y *= s;
+	z *= s;
+	return *this;
+}
+
+vec3 vec3::operator /=(double s) {
+	x /= s;
+	y /= s;
+	z /= s;
+	return *this;
+}
+
 double vec3::lenSq() const {
 	return x * x + y * y + z * z;
 }
@@ -85,6 +113,20 @@ vec3 vec3::unit() const {
 	return isZero() ? zero : vec3(x, y, z) / len();
 }
 
+vec3 vec3::sum(vec3* vecs, size_t nVecs) {
+	vec3 sum = vec3::zero;
+	for (size_t i = 0; i < nVecs; i++)
+	{
+		sum += vecs[i];
+	}
+
+	return sum;
+}
+
+vec3 vec3::average(vec3* vecs, size_t nVecs) {
+	return sum(vecs, nVecs) / nVecs;
+}
+
 triangle::triangle() : triangle::triangle(-1, -1, -1, -1) { }
 
 triangle::triangle(size_t i, size_t v1, size_t v2, size_t v3) {
@@ -117,4 +159,8 @@ size_t util::factorial(size_t n) {
 
 double util::tetVolume(vec3 a, vec3 b, vec3 c, vec3 d) {
 	return std::abs(((b - a) ^ (c - a)) * (d - a)) / 6;
+}
+
+PINVOKE void Unsafe_ReleaseIntArray(int* arr) {
+	delete arr;
 }
