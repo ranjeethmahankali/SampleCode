@@ -15,14 +15,12 @@ convex_hull::convex_hull(double* pts, size_t nPts) {
 	_center = vec3::average(_pts, _nPts);
 
 	_triangles = std::unordered_map<size_t, triangle>();
-	_insidePts = std::unordered_set<size_t>();
 	_edgeFaceMap = std::unordered_map<size_t, std::unordered_set<size_t>>();
 	compute();
 }
 
 convex_hull::~convex_hull() {
 	_triangles.clear();
-	_insidePts.clear();
 	_outsidePts.clear();
 	/*auto iter = _edgeFaceMap.begin();
 	while (iter != _edgeFaceMap.end()) {
@@ -41,17 +39,14 @@ size_t convex_hull::numTriangles() const {
 	return _triangles.size();
 }
 
-void convex_hull::getAllTriangles(std::vector<int>& indices) {
-	size_t nTriangles = numTriangles();
+void convex_hull::getAllTriangles(int* triIndices) {
 	std::unordered_map<size_t, triangle>::iterator iter = _triangles.begin();
 	int i = 0;
 	while(iter != _triangles.end())
 	{
-		if (iter->second.isValid()) {
-			indices.push_back(iter->second.a);
-			indices.push_back(iter->second.b);
-			indices.push_back(iter->second.c);
-		}
+		triIndices[i++] = iter->second.a;
+		triIndices[i++] = iter->second.b;
+		triIndices[i++] = iter->second.c;
 		iter++;
 	}
 }
@@ -104,8 +99,13 @@ triangle convex_hull::popTriangle(size_t index, size_t edgeIndices[3],
 }
 
 vec3 convex_hull::triangleNormal(size_t iTri, triangle &tri) {
-	tri = _triangles[iTri];
-	return tri.isValid() ? triangleNormal(tri) : vec3::unset;
+	auto match = _triangles.find(iTri);
+	if (match != _triangles.end()) {
+		tri = match->second;
+		return triangleNormal(tri);
+	}
+	tri = triangle(-1, -1, -1, -1);
+	return vec3::unset;
 }
 
 vec3 convex_hull::triangleNormal(triangle tri) const {
@@ -194,12 +194,9 @@ PINVOKE void Unsafe_ComputeHull(double* pts, size_t nPoints,
 	int* &triangles, int& nTriangles) {
 
 	convex_hull hull(pts, nPoints);
-	std::vector<int> triIndices = std::vector<int>();
-	hull.getAllTriangles(triIndices);
-	nTriangles = triIndices.size() / 3;
-	triangles = new int[triIndices.size()];
-	std::copy(triIndices.begin(), triIndices.end(), triangles);
-
+	nTriangles = hull.numTriangles();
+	triangles = new int[nTriangles * 3];
+	hull.getAllTriangles(triangles);
 }
 
 void convex_hull::createInitialSimplex(size_t &triI) {

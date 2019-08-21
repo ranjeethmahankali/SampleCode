@@ -9,7 +9,6 @@ class convex_hull
 {
 private:
 	std::unordered_map<size_t, triangle> _triangles;
-	std::unordered_set<size_t> _insidePts;
 	std::unordered_set<size_t> _outsidePts;
 	std::unordered_map<size_t, std::unordered_set<size_t>> _edgeFaceMap;
 
@@ -40,7 +39,7 @@ public:
 
 	vec3 getPt(size_t index) const;
 	size_t numTriangles() const;
-	void getAllTriangles(std::vector<int> &indices);
+	void getAllTriangles(int* triIndices);
 };
 
 PINVOKE void Unsafe_ComputeHull(double* pts, size_t numPoints,
