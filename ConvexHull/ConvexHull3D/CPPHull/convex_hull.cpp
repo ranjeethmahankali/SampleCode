@@ -85,8 +85,10 @@ void convex_hull::setTriangle(triangle tri) {
 triangle convex_hull::popTriangle(size_t index, size_t edgeIndices[3],
 	size_t adjTriangles[3]) {
 
-	triangle tri = _triangles[index];
-	if (tri.isValid()) {
+	triangle tri;
+	auto match = _triangles.find(index);
+	if (match != _triangles.end()) {
+		tri = match->second;
 		std::unordered_set<size_t> triSet;
 		_triangles.erase(index);
 		getEdgeIndices(tri, edgeIndices);
@@ -290,7 +292,7 @@ void convex_hull::compute() {
 		iTri = gQue.front();
 		gQue.pop();
 		fpi = farthestPoint(iTri, cTri);
-		normal = triangleNormal(iTri, cTri);
+		normal = triangleNormal(cTri);
 		if (fpi == -1 || !cTri.isValid()) {
 			continue;
 		}
