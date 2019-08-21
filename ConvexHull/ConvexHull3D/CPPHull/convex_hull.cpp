@@ -145,6 +145,11 @@ bool convex_hull::isInsideHull(vec3 pt, size_t ptIndex) {
 	auto iter = _triangles.begin();
 	while (iter != _triangles.end())
 	{
+		if (!iter->second.isValid()) {
+			iter++;
+			continue;
+		}
+
 		if (ptIndex == iter->second.a || ptIndex == iter->second.b || ptIndex == iter->second.c) {
 			return true;
 		}
