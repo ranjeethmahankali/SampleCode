@@ -52,12 +52,14 @@ void convex_hull::getAllTriangles(int* triIndices) {
 }
 
 double convex_hull::trianglePlaneDist(size_t iTri, vec3 pt, triangle &tri){
-	vec3 normal = triangleNormal(iTri, tri);
-	if (!tri.isValid()) {
+	auto match = _triangles.find(iTri);
+	if (match == _triangles.end()) {
+		tri = triangle(-1, -1, -1, -1);
 		return doubleMinValue;
 	}
+	tri = match->second;
 
-	return (pt - _pts[tri.a]) * normal;
+	return (pt - _pts[tri.a]) * tri.normal;
 }
 
 void convex_hull::getEdgeIndices(triangle tri, size_t indices[3]) const {
@@ -66,7 +68,12 @@ void convex_hull::getEdgeIndices(triangle tri, size_t indices[3]) const {
 	indices[2] = std::min(tri.c, tri.a) * _nPts + std::max(tri.c, tri.a);
 }
 
-void convex_hull::setTriangle(triangle tri) {
+void convex_hull::setTriangle(triangle &tri) {
+	tri.normal = ((_pts[tri.b] - _pts[tri.a]) ^ (_pts[tri.c] - _pts[tri.a])).unit();
+	if (isTriangleFacing(tri, _center)) {
+		tri.flip();
+	}
+
 	_triangles.insert_or_assign(tri.index, tri);
 	size_t eis[3];
 	getEdgeIndices(tri, eis);
@@ -98,29 +105,18 @@ triangle convex_hull::popTriangle(size_t index, size_t edgeIndices[3],
 	return tri;
 }
 
-vec3 convex_hull::triangleNormal(size_t iTri, triangle &tri) {
-	auto match = _triangles.find(iTri);
-	if (match != _triangles.end()) {
-		tri = match->second;
-		return triangleNormal(tri);
-	}
-	tri = triangle(-1, -1, -1, -1);
-	return vec3::unset;
-}
-
-vec3 convex_hull::triangleNormal(triangle tri) const {
-	return ((_pts[tri.b] - _pts[tri.a]) ^ (_pts[tri.c] - _pts[tri.a])).unit();
-}
-
 bool convex_hull::isTriangleFacing(size_t iTri, vec3 pt, triangle &tri) {
-	vec3 normal = triangleNormal(iTri, tri);
-	return normal.isValid() ? ((normal * (pt - _pts[tri.a])) > 0) :
-		false;
+	auto match = _triangles.find(iTri);
+	if (match == _triangles.end()) {
+		tri = triangle(-1, -1, -1, -1);
+		return false;
+	}
+	tri = match->second;
+	return ((tri.normal * (pt - _pts[tri.a])) > 0);
 }
 
 bool convex_hull::isTriangleFacing(triangle tri, vec3 pt) const {
-	vec3 normal = triangleNormal(tri);
-	return normal.isValid() ? ((normal * (pt - _pts[tri.a])) > 0) :
+	return tri.normal.isValid() ? ((tri.normal * (pt - _pts[tri.a])) > 0) :
 		false;
 }
 
@@ -245,7 +241,7 @@ void convex_hull::createInitialSimplex(size_t &triI) {
 		delete combs[i];
 	}
 
-	vec3 center = (_pts[best[0]] + _pts[best[1]] + _pts[best[2]] + 
+	_center = (_pts[best[0]] + _pts[best[1]] + _pts[best[2]] + 
 		_pts[best[3]]) / 4;
 
 	triangle simplex[4]{
@@ -257,9 +253,6 @@ void convex_hull::createInitialSimplex(size_t &triI) {
 
 	for (size_t i = 0; i < 4; i++)
 	{
-		if (isTriangleFacing(simplex[i], center)) {
-			simplex[i].flip();
-		}
 		setTriangle(simplex[i]);
 	}
 }
@@ -289,7 +282,7 @@ void convex_hull::compute() {
 		iTri = gQue.front();
 		gQue.pop();
 		fpi = farthestPoint(iTri, cTri);
-		normal = triangleNormal(cTri);
+		normal = cTri.normal;
 		if (fpi == -1 || !cTri.isValid()) {
 			continue;
 		}

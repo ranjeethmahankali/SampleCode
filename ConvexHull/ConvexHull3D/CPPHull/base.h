@@ -51,7 +51,8 @@ struct vec3 {
 struct triangle {
 	size_t index;
 	size_t a, b, c;
-	
+	vec3 normal;
+
 	triangle();
 	triangle(size_t i, size_t v1, size_t v2, size_t v3);
 

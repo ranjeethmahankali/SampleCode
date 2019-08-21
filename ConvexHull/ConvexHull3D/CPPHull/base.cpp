@@ -134,6 +134,7 @@ triangle::triangle(size_t i, size_t v1, size_t v2, size_t v3) {
 	a = v1;
 	b = v2;
 	c = v3;
+	normal = vec3::unset;
 }
 
 bool triangle::isValid() const {
@@ -147,10 +148,13 @@ void triangle::flip() {
 	temp = b;
 	b = c;
 	c = temp;
+	normal = -normal;
 }
 
 triangle triangle::flipped() const {
-	return triangle(index, a, c, b);
+	triangle tri = triangle(index, a, b, c);
+	tri.flip();
+	return tri;
 }
 
 size_t util::factorial(size_t n) {
