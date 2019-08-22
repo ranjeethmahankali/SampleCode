@@ -40,6 +40,8 @@ namespace ConvexHull3D
 
             mesh.IsValidWithLog(out string log);
 
+            mesh.RebuildNormals();
+
             // TODO: Compact the mesh to remove points not in the hull.
             return mesh;
         }

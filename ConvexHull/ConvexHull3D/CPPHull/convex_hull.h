@@ -27,8 +27,9 @@ private:
 	double trianglePlaneDist(size_t iTri, vec3 pt, triangle &tri);
 	size_t farthestPoint(size_t iTri, triangle &triangle);
 	double triangleSolidAngle(triangle tri, vec3 pt) const;
-	void updateInteriorPoints();
-	bool isInsideHull(vec3 pt, size_t index);
+	void updateInteriorPoints(std::vector<size_t>::iterator newTrStart,
+		std::vector<size_t>::iterator newTrEnd, std::vector<size_t>::iterator popStart,
+		std::vector<size_t>::iterator popEnd);
 	void createInitialSimplex(size_t &triIndex);
 
 public:

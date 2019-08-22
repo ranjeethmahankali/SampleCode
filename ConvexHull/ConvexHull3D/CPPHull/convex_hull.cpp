@@ -126,9 +126,12 @@ double convex_hull::triangleSolidAngle(triangle tri, vec3 pt) const {
 
 size_t convex_hull::farthestPoint(size_t iTri, triangle &tri) {
 	size_t farthest = -1;
-	double dMax = 0, dist;
+	double dMax = 1e-10, dist;
 	for (const size_t& i : _outsidePts) {
 		dist = trianglePlaneDist(iTri, _pts[i], tri);
+		if (i == tri.a || i == tri.b || i == tri.c) {
+			continue;
+		}
 		if (dist > dMax) {
 			dMax = dist;
 			farthest = i;
@@ -137,47 +140,70 @@ size_t convex_hull::farthestPoint(size_t iTri, triangle &tri) {
 	return farthest;
 }
 
-bool convex_hull::isInsideHull(vec3 pt, size_t ptIndex) {
-	triangle tri;
-	double sign, angSum = 0, dist;
-	auto iter = _triangles.begin();
-	while (iter != _triangles.end())
-	{
-		if (!iter->second.isValid()) {
-			iter++;
-			continue;
-		}
-
-		if (ptIndex == iter->second.a || ptIndex == iter->second.b || ptIndex == iter->second.c) {
-			return true;
-		}
-		dist = trianglePlaneDist(iter->first, pt, tri);
-		if (std::abs(dist) < 1e-10) {
-			return true;
-		}
-		sign = dist > 0 ? 1 : -1;
-		angSum += sign * triangleSolidAngle(tri, pt);
-		iter++;
-	}
-
-	return std::abs(angSum - (4 * M_PI)) < 1e-6;
-}
-
-void convex_hull::updateInteriorPoints() {
-	std::vector<size_t> remove;
+void convex_hull::updateInteriorPoints(std::vector<size_t>::iterator newTrStart,
+	std::vector<size_t>::iterator newTrEnd, std::vector<size_t>::iterator popStart,
+	std::vector<size_t>::iterator popEnd) {
+	
+	std::vector<size_t> remove, check;
 	auto iter1 = _outsidePts.begin();
+	std::vector<size_t>::iterator iter2;
+	std::unordered_map<size_t, triangle>::iterator match;
+	bool outside;
 	while (iter1 != _outsidePts.end()) {
-		if (isInsideHull(_pts[*iter1], *iter1)) {
-			remove.push_back(*iter1);
+		outside = false;
+		iter2 = popStart;
+		while (iter2 != popEnd) {
+			match = _triangles.find(*iter2);
+			if (match == _triangles.end()) {
+				iter2++;
+				continue;
+			}
+			if (*iter1 == match->second.a || *iter1 == match->second.b || *iter1 == match->second.c) {
+				remove.push_back(*iter1);
+			}
+			if ((match->second.normal * (_pts[*iter1] - _pts[match->second.a])) > 1e-10) {
+				outside = true;
+				break;
+			}
+			iter2++;
 		}
+
+		if (outside) {
+			check.push_back(*iter1);
+		}
+
 		iter1++;
 	}
 
-	auto iter2 = remove.begin();
-	while (iter2 != remove.end())
+	auto itCheck = check.begin();
+	while (itCheck != check.end()) {
+		outside = false;
+		iter2 = newTrStart;
+		while (iter2 != newTrEnd) {
+			match = _triangles.find(*iter2);
+			if (match == _triangles.end()) {
+				iter2++;
+				continue;
+			}
+			if ((match->second.normal * (_pts[*itCheck] - _pts[match->second.a])) > 1e-10) {
+				outside = true;
+				break;
+			}
+			iter2++;
+		}
+
+		if (!outside) {
+			remove.push_back(*itCheck);
+		}
+
+		itCheck++;
+	}
+
+	auto iter3 = remove.begin();
+	while (iter3 != remove.end())
 	{
-		_outsidePts.erase(*iter2);
-		iter2++;
+		_outsidePts.erase(*iter3);
+		iter3++;
 	}
 }
 
@@ -251,16 +277,20 @@ void convex_hull::createInitialSimplex(size_t &triI) {
 		triangle(triI++, best[0], best[1], best[3])
 	};
 
+	std::vector<size_t> newTris;
+	newTris.reserve(4);
 	for (size_t i = 0; i < 4; i++)
 	{
 		setTriangle(simplex[i]);
+		newTris.push_back(simplex[i].index);
 	}
+
+	updateInteriorPoints(newTris.begin(), newTris.end(), newTris.begin(), newTris.end());
 }
 
 void convex_hull::compute() {
 	size_t curTriIndex = 0;
 	createInitialSimplex(curTriIndex);
-	updateInteriorPoints();
 	std::queue<size_t> gQue = std::queue<size_t>();
 	auto iter = _triangles.begin();
 	while (iter != _triangles.end()) {
@@ -270,11 +300,12 @@ void convex_hull::compute() {
 
 	size_t iTri, fpi;
 	vec3 fpt, normal;
-	triangle cTri, tri2, newTri;
+	triangle cTri, tri2, newTri, popTri;
 	size_t adjTri[3], adjEdges[3];
 	std::queue<size_t> popQ = std::queue<size_t>();
 	std::vector<size_t> horizonIndices = std::vector<size_t>();
 	std::vector<size_t>::iterator hIter;
+	std::vector<size_t> newTriangles, popped;
 	size_t ev1, ev2;
 	vec3 avg;
 	while (!gQue.empty())
@@ -290,10 +321,17 @@ void convex_hull::compute() {
 		popQ.push(iTri);
 
 		horizonIndices.clear();
+		popped.clear();
 		while (!popQ.empty())
 		{
-			cTri = popTriangle(popQ.front(), adjEdges, adjTri);
+			popTri = popTriangle(popQ.front(), adjEdges, adjTri);
 			popQ.pop();
+
+			if (!popTri.isValid()) {
+				continue;
+			}
+
+			popped.push_back(popTri.index);
 
 			for (size_t ti = 0; ti < 3; ti++)
 			{
@@ -319,6 +357,8 @@ void convex_hull::compute() {
 		}
 		avg /= 2 * horizonIndices.size();
 
+		newTriangles.clear();
+		newTriangles.reserve(horizonIndices.size());
 		hIter = horizonIndices.begin();
 		while (hIter != horizonIndices.end())
 		{
@@ -328,9 +368,10 @@ void convex_hull::compute() {
 				newTri.flip();
 			}
 			setTriangle(newTri);
+			newTriangles.push_back(newTri.index);
 			gQue.push(newTri.index);
 			hIter++;
 		}
-		updateInteriorPoints();
+		updateInteriorPoints(newTriangles.begin(), newTriangles.end(), popped.begin(), popped.end());
 	}
 }
