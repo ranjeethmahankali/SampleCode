@@ -37,7 +37,7 @@ struct vec3 {
 
 	double lenSq() const;
 	double len() const;
-	void copyTo(double* dest, size_t &pos) const;
+	void copyTo(double* dest, size_t& pos) const;
 	void copyTo(double dest[3]) const;
 	bool isZero() const;
 	bool isValid() const;
@@ -94,7 +94,7 @@ private:
 					com[j + 1] = com2[i][j];
 				}
 
-				delete com2[i];
+				delete[] com2[i];
 				combs.push_back(com);
 			}
 		}

@@ -28,7 +28,7 @@ convex_hull::~convex_hull() {
 		iter++;
 	}*/
 	_edgeFaceMap.clear();
-	delete _pts;
+	delete[] _pts;
 }
 
 vec3 convex_hull::getPt(size_t index) const {
@@ -51,7 +51,7 @@ void convex_hull::getAllTriangles(int* triIndices) {
 	}
 }
 
-double convex_hull::trianglePlaneDist(size_t iTri, vec3 pt, triangle &tri){
+double convex_hull::trianglePlaneDist(size_t iTri, vec3 pt, triangle& tri){
 	auto match = _triangles.find(iTri);
 	if (match == _triangles.end()) {
 		tri = triangle(-1, -1, -1, -1);
@@ -68,7 +68,7 @@ void convex_hull::getEdgeIndices(triangle tri, size_t indices[3]) const {
 	indices[2] = std::min(tri.c, tri.a) * _nPts + std::max(tri.c, tri.a);
 }
 
-void convex_hull::setTriangle(triangle &tri) {
+void convex_hull::setTriangle(triangle& tri) {
 	tri.normal = ((_pts[tri.b] - _pts[tri.a]) ^ (_pts[tri.c] - _pts[tri.a])).unit();
 	if (isTriangleFacing(tri, _center)) {
 		tri.flip();
@@ -105,7 +105,7 @@ triangle convex_hull::popTriangle(size_t index, size_t edgeIndices[3],
 	return tri;
 }
 
-bool convex_hull::isTriangleFacing(size_t iTri, vec3 pt, triangle &tri) {
+bool convex_hull::isTriangleFacing(size_t iTri, vec3 pt, triangle& tri) {
 	auto match = _triangles.find(iTri);
 	if (match == _triangles.end()) {
 		tri = triangle(-1, -1, -1, -1);
@@ -124,7 +124,7 @@ double convex_hull::triangleSolidAngle(triangle tri, vec3 pt) const {
 	return vec3::solidAngle(_pts[tri.a] - pt, _pts[tri.b] - pt, _pts[tri.c] - pt);
 }
 
-size_t convex_hull::farthestPoint(size_t iTri, triangle &tri) {
+size_t convex_hull::farthestPoint(size_t iTri, triangle& tri) {
 	size_t farthest = -1;
 	double dMax = 1e-10, dist;
 	for (const size_t& i : _outsidePts) {
@@ -213,7 +213,7 @@ void convex_hull::getVertIndicesForEdge(size_t edgeI, size_t& v1, size_t& v2) co
 }
 
 PINVOKE void Unsafe_ComputeHull(double* pts, size_t nPoints,
-	int* &triangles, int& nTriangles) {
+	int*& triangles, int& nTriangles) {
 
 	convex_hull hull(pts, nPoints);
 	nTriangles = hull.numTriangles();
@@ -221,7 +221,7 @@ PINVOKE void Unsafe_ComputeHull(double* pts, size_t nPoints,
 	hull.getAllTriangles(triangles);
 }
 
-void convex_hull::createInitialSimplex(size_t &triI) {
+void convex_hull::createInitialSimplex(size_t& triI) {
 	size_t bounds[6];
 	double extremes[6];
 	for (size_t ei = 0; ei < 6; ei++)
@@ -264,7 +264,7 @@ void convex_hull::createInitialSimplex(size_t &triI) {
 			}
 			maxVol = vol;
 		}
-		delete combs[i];
+		delete[] combs[i];
 	}
 
 	_center = (_pts[best[0]] + _pts[best[1]] + _pts[best[2]] + 

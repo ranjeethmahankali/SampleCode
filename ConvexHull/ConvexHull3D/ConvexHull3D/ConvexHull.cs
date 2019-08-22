@@ -26,7 +26,7 @@ namespace ConvexHull3D
             double[] coords = points.SelectMany(pt => new double[] { pt.X, pt.Y, pt.Z }).ToArray();
             IntPtr trPtr = IntPtr.Zero;
             int nTriangles = 0;
-            var watch = System.Diagnostics.Stopwatch.StartNew();
+            // var watch = System.Diagnostics.Stopwatch.StartNew();
             Unsafe_ComputeHull(coords, (ulong)points.Count, ref trPtr, ref nTriangles);
             int[] triangleIndices = new int[nTriangles * 3];
             Marshal.Copy(trPtr, triangleIndices, 0, (int)nTriangles * 3);
@@ -38,8 +38,8 @@ namespace ConvexHull3D
             {
                 mesh.Faces.AddFace(triangleIndices[3 * i], triangleIndices[3 * i + 1], triangleIndices[3 * i + 2]);
             }
-            watch.Stop();
-            System.Windows.Forms.MessageBox.Show($"{watch.ElapsedMilliseconds}ms and {watch.ElapsedTicks} ticks.");
+            // watch.Stop();
+            // System.Windows.Forms.MessageBox.Show($"{watch.ElapsedMilliseconds}ms and {watch.ElapsedTicks} ticks.");
             mesh.IsValidWithLog(out string log);
 
             mesh.RebuildNormals();

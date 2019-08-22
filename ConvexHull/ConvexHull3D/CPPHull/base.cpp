@@ -84,7 +84,7 @@ double vec3::len() const  {
 	return sqrt(lenSq());
 }
 
-void vec3::copyTo(double* dest, size_t &pos) const  {
+void vec3::copyTo(double* dest, size_t& pos) const  {
 	dest[pos++] = x;
 	dest[pos++] = y;
 	dest[pos++] = z;
@@ -166,5 +166,5 @@ double util::tetVolume(vec3 a, vec3 b, vec3 c, vec3 d) {
 }
 
 PINVOKE void Unsafe_ReleaseIntArray(int* arr) {
-	delete arr;
+	delete[] arr;
 }
