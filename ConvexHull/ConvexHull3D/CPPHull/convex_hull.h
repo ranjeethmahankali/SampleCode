@@ -17,16 +17,16 @@ private:
 
 	void compute();
 	
-	void getEdgeIndices(triangle tri, size_t indices[3]) const;
+	void getEdgeIndices(const triangle& tri, size_t indices[3]) const;
 	void getVertIndicesForEdge(size_t edgeI, size_t& v1, size_t& v2) const;
 	void setTriangle(triangle& tri);
 	triangle popTriangle(size_t index, size_t edgeIndices[3],
 		size_t adjTriangles[3]);
-	bool isTriangleFacing(size_t iTri, vec3 pt, triangle& tri);
-	bool isTriangleFacing(triangle tri, vec3 pt) const;
-	double trianglePlaneDist(size_t iTri, vec3 pt, triangle& tri);
+	bool isTriangleFacing(size_t iTri, const vec3& pt, triangle& tri);
+	bool isTriangleFacing(const triangle& tri, const vec3& pt) const;
+	double trianglePlaneDist(size_t iTri, const vec3& pt, triangle& tri);
 	size_t farthestPoint(size_t iTri, triangle& triangle);
-	double triangleSolidAngle(triangle tri, vec3 pt) const;
+	double triangleSolidAngle(const triangle& tri, const vec3& pt) const;
 	void updateInteriorPoints(std::vector<size_t>::iterator newTrStart,
 		std::vector<size_t>::iterator newTrEnd, std::vector<size_t>::iterator popStart,
 		std::vector<size_t>::iterator popEnd);

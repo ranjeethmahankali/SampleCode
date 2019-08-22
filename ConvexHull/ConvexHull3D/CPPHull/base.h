@@ -19,21 +19,20 @@ struct vec3 {
 	vec3(double a, double b, double c);
 	vec3();
 
-	vec3 operator+(vec3 v);
-	vec3 operator-(vec3 v);
-	double operator*(vec3 v);
-	vec3 operator^(vec3 v);
+	vec3 operator+(const vec3& v) const;
+	vec3 operator-(const vec3& v) const;
+	double operator*(const vec3& v) const;
+	vec3 operator^(const vec3& v) const;
+	vec3 operator*(const double& s) const;
+	vec3 operator/(const double& s) const;
+	bool operator==(const vec3& v) const;
+	bool operator!=(const vec3& v) const;
+	vec3 operator+=(const vec3& v);
+	vec3 operator-=(const vec3& v);
+	vec3 operator/=(const double& s);
+	vec3 operator*=(const double&s);
 
-	vec3 operator*(double s);
-	vec3 operator/(double s);
-	bool operator==(vec3 v);
-	bool operator!=(vec3 v);
-	vec3 operator+=(vec3 v);
-	vec3 operator-=(vec3 v);
-	vec3 operator/=(double s);
-	vec3 operator*=(double s);
-
-	vec3 operator-();
+	vec3 operator-() const;
 
 	double lenSq() const;
 	double len() const;
@@ -43,9 +42,9 @@ struct vec3 {
 	bool isValid() const;
 	vec3 unit() const;
 
-	static double solidAngle(vec3 a, vec3 b, vec3 c);
-	static vec3 sum(vec3* vecs, size_t nVecs);
-	static vec3 average(vec3* vecs, size_t nVecs);
+	static double solidAngle(const vec3& a, const vec3& b, const vec3& c);
+	static vec3 sum(vec3* vecs, const size_t& nVecs);
+	static vec3 average(vec3* vecs, const size_t& nVecs);
 };
 
 struct triangle {

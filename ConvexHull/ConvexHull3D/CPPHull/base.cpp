@@ -11,65 +11,65 @@ vec3::vec3(double a, double b, double c) {
 
 vec3::vec3() : vec3(0, 0, 0) { }
 
-vec3 vec3::operator+(vec3 v) {
+vec3 vec3::operator+(const vec3& v) const {
 	return vec3(x + v.x, y + v.y, z + v.z);
 }
 
-vec3 vec3::operator-(vec3 v) {
+vec3 vec3::operator-(const vec3& v) const {
 	return vec3(x - v.x, y - v.y, z - v.z);
 }
 
-double vec3::operator*(vec3 v) {
+double vec3::operator*(const vec3& v) const {
 	return (x * v.x + y * v.y + z * v.z);
 }
 
-vec3 vec3::operator^(vec3 v) {
+vec3 vec3::operator^(const vec3& v) const {
 	return vec3(y * v.z - z * v.y, z * v.x - x * v.z,
 		x * v.y - y * v.x);
 }
 
-vec3 vec3::operator*(double s) {
+vec3 vec3::operator*(const double& s) const {
 	return vec3(x * s, y * s, z * s);
 }
 
-vec3 vec3::operator/(double s) {
+vec3 vec3::operator/(const double& s) const {
 	return vec3(x / s, y / s, z / s);
 }
 
-vec3 vec3::operator-() {
+vec3 vec3::operator-() const {
 	return vec3(-x, -y, -z);
 }
 
-bool vec3::operator==(vec3 v) {
+bool vec3::operator==(const vec3& v) const {
 	return x == v.x && y == v.y && z == v.z;
 }
 
-bool vec3::operator!=(vec3 v) {
+bool vec3::operator!=(const vec3& v) const {
 	return x != v.x || y != v.y || z != v.z;
 }
 
-vec3 vec3::operator+=(vec3 v) {
+vec3 vec3::operator+=(const vec3& v) {
 	x += v.x;
 	y += v.y;
 	z += v.z;
 	return *this;
 }
 
-vec3 vec3::operator-= (vec3 v) {
+vec3 vec3::operator-= (const vec3& v) {
 	x -= v.y;
 	y -= v.y;
 	z -= v.z;
 	return *this;
 }
 
-vec3 vec3::operator *=(double s) {
+vec3 vec3::operator *=(const double& s) {
 	x *= s;
 	y *= s;
 	z *= s;
 	return *this;
 }
 
-vec3 vec3::operator /=(double s) {
+vec3 vec3::operator /=(const double& s) {
 	x /= s;
 	y /= s;
 	z /= s;
@@ -96,7 +96,7 @@ void vec3::copyTo(double dest[3]) const {
 	dest[2] = z;
 }
 
-double vec3::solidAngle(vec3 a, vec3 b, vec3 c) {
+double vec3::solidAngle(const vec3& a, const vec3& b, const vec3& c) {
 	return abs(((a ^ b) * c) / (a.len() * b.len() * c.len() + (a * b) * c.len() +
 		(b * c) * a.len() + (c * a) * c.len()));
 }
@@ -113,7 +113,7 @@ vec3 vec3::unit() const {
 	return isZero() ? zero : vec3(x, y, z) / len();
 }
 
-vec3 vec3::sum(vec3* vecs, size_t nVecs) {
+vec3 vec3::sum(vec3* vecs, const size_t& nVecs) {
 	vec3 sum = vec3::zero;
 	for (size_t i = 0; i < nVecs; i++)
 	{
@@ -123,19 +123,14 @@ vec3 vec3::sum(vec3* vecs, size_t nVecs) {
 	return sum;
 }
 
-vec3 vec3::average(vec3* vecs, size_t nVecs) {
+vec3 vec3::average(vec3* vecs, const size_t& nVecs) {
 	return sum(vecs, nVecs) / nVecs;
 }
 
 triangle::triangle() : triangle::triangle(-1, -1, -1, -1) { }
 
-triangle::triangle(size_t i, size_t v1, size_t v2, size_t v3) {
-	index = i;
-	a = v1;
-	b = v2;
-	c = v3;
-	normal = vec3::unset;
-}
+triangle::triangle(size_t i, size_t v1, size_t v2, size_t v3)
+	: a(v1), b(v2), c(v3), index(i), normal(vec3::unset) {}
 
 bool triangle::isValid() const {
 	// Normally we would check if the numbers are > -1. but because size_t is unsigned. -1 causes integer underflow

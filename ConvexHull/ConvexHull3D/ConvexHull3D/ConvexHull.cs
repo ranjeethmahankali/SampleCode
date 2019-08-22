@@ -17,8 +17,10 @@ namespace ConvexHull3D
         [DllImport("CPPHull.dll", CallingConvention = CallingConvention.Cdecl)]
         private static extern void Unsafe_ReleaseIntArray(IntPtr ptr);
 
-        public static Mesh Create(List<Point3d> points)
+        public static Mesh Create(List<Point3d> points, out long timeInMs, out long ticks)
         {
+            timeInMs = 0;
+            ticks = 0;
             if (points.Count < 4)
             {
                 return null;
@@ -26,10 +28,10 @@ namespace ConvexHull3D
             double[] coords = points.SelectMany(pt => new double[] { pt.X, pt.Y, pt.Z }).ToArray();
             IntPtr trPtr = IntPtr.Zero;
             int nTriangles = 0;
-            // var watch = System.Diagnostics.Stopwatch.StartNew();
+            var watch = System.Diagnostics.Stopwatch.StartNew();
             Unsafe_ComputeHull(coords, (ulong)points.Count, ref trPtr, ref nTriangles);
             int[] triangleIndices = new int[nTriangles * 3];
-            Marshal.Copy(trPtr, triangleIndices, 0, (int)nTriangles * 3);
+            Marshal.Copy(trPtr, triangleIndices, 0, nTriangles * 3);
             Unsafe_ReleaseIntArray(trPtr);
 
             Mesh mesh = new Mesh();
@@ -38,8 +40,9 @@ namespace ConvexHull3D
             {
                 mesh.Faces.AddFace(triangleIndices[3 * i], triangleIndices[3 * i + 1], triangleIndices[3 * i + 2]);
             }
-            // watch.Stop();
-            // System.Windows.Forms.MessageBox.Show($"{watch.ElapsedMilliseconds}ms and {watch.ElapsedTicks} ticks.");
+            watch.Stop();
+            timeInMs = watch.ElapsedMilliseconds;
+            ticks = watch.ElapsedTicks;
             mesh.IsValidWithLog(out string log);
 
             mesh.RebuildNormals();

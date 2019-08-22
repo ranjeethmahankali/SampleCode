@@ -51,7 +51,7 @@ void convex_hull::getAllTriangles(int* triIndices) {
 	}
 }
 
-double convex_hull::trianglePlaneDist(size_t iTri, vec3 pt, triangle& tri){
+double convex_hull::trianglePlaneDist(size_t iTri, const vec3& pt, triangle& tri){
 	auto match = _triangles.find(iTri);
 	if (match == _triangles.end()) {
 		tri = triangle(-1, -1, -1, -1);
@@ -62,7 +62,7 @@ double convex_hull::trianglePlaneDist(size_t iTri, vec3 pt, triangle& tri){
 	return (pt - _pts[tri.a]) * tri.normal;
 }
 
-void convex_hull::getEdgeIndices(triangle tri, size_t indices[3]) const {
+void convex_hull::getEdgeIndices(const triangle& tri, size_t indices[3]) const {
 	indices[0] = std::min(tri.a, tri.b) * _nPts + std::max(tri.a, tri.b);
 	indices[1] = std::min(tri.b, tri.c) * _nPts + std::max(tri.b, tri.c);
 	indices[2] = std::min(tri.c, tri.a) * _nPts + std::max(tri.c, tri.a);
@@ -105,7 +105,7 @@ triangle convex_hull::popTriangle(size_t index, size_t edgeIndices[3],
 	return tri;
 }
 
-bool convex_hull::isTriangleFacing(size_t iTri, vec3 pt, triangle& tri) {
+bool convex_hull::isTriangleFacing(size_t iTri, const vec3& pt, triangle& tri) {
 	auto match = _triangles.find(iTri);
 	if (match == _triangles.end()) {
 		tri = triangle(-1, -1, -1, -1);
@@ -115,12 +115,12 @@ bool convex_hull::isTriangleFacing(size_t iTri, vec3 pt, triangle& tri) {
 	return ((tri.normal * (pt - _pts[tri.a])) > 0);
 }
 
-bool convex_hull::isTriangleFacing(triangle tri, vec3 pt) const {
+bool convex_hull::isTriangleFacing(const triangle& tri, const vec3& pt) const {
 	return tri.normal.isValid() ? ((tri.normal * (pt - _pts[tri.a])) > 0) :
 		false;
 }
 
-double convex_hull::triangleSolidAngle(triangle tri, vec3 pt) const {
+double convex_hull::triangleSolidAngle(const triangle& tri, const vec3& pt) const {
 	return vec3::solidAngle(_pts[tri.a] - pt, _pts[tri.b] - pt, _pts[tri.c] - pt);
 }
 
