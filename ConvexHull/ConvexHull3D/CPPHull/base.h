@@ -5,6 +5,7 @@
 #include <vector>
 #include <unordered_set>
 #include <unordered_map>
+#include <set>
 #include <algorithm>
 
 #define PINVOKE extern "C" __declspec(dllexport)
@@ -47,6 +48,21 @@ struct vec3 {
 	static vec3 average(vec3* vecs, const size_t& nVecs);
 };
 
+struct indexPair {
+	size_t p, q;
+
+	bool operator==(const indexPair other) const;
+	bool operator!=(const indexPair other) const;
+
+	indexPair(size_t i, size_t j)
+		: p(i), q(j) {}
+
+	indexPair()
+		: indexPair(-1, -1) {}
+
+	size_t hash() const;
+};
+
 struct triangle {
 	size_t index;
 	size_t a, b, c;
@@ -58,56 +74,24 @@ struct triangle {
 	bool isValid() const;
 	void flip();
 	triangle flipped() const;
+	indexPair edge(char edgeIndex) const;
 };
 
+
+namespace std {
+	template<> struct hash<indexPair> {
+		typedef indexPair argument_type;
+		typedef size_t result_type;
+		result_type operator()(const argument_type& pair) const noexcept {
+			return pair.hash();
+		}
+	};
+}
+
+
+
 class util {
-private:
-	// Default implementations of the template functions needs to be
-	// in the header file.
-	template<typename T>
-	static void combinationsInternal(T* arr, size_t n, size_t total, 
-		size_t curPos, std::vector<T*>& combs) {
-
-		if (n == 0) {
-			combs.push_back(new T[0]);
-			return;
-		}
-		else if (n == total) {
-			combs.push_back(arr);
-			return;
-		}
-		else if (n > total) {
-			throw "The combinations cannot contain more elements than the total.";
-		}
-
-		for (size_t k = curPos; k < total; k++)
-		{
-			std::vector<T*> com2;
-			util::combinationsInternal(arr, n - 1, total, k + 1, com2);
-			for (size_t i = 0; i < com2.size(); i++)
-			{
-				T* com = new T[n];
-				com[0] = arr[k];
-				for (size_t j = 0; j < n - 1; j++)
-				{
-					com[j + 1] = com2[i][j];
-				}
-
-				delete[] com2[i];
-				combs.push_back(com);
-			}
-		}
-	}
 public:
-	// Default implementations of the template functions needs to be
-	// in the header file.
-	template<typename T>
-	static void combinations(T* arr, size_t n, size_t total, 
-		std::vector<T*>& combs) {
-		
-		util::combinationsInternal(arr, n, total, 0, combs);
-	}
-
 	static double tetVolume(vec3 a, vec3 b, vec3 c, vec3 d);
 	static size_t factorial(size_t n);
 };

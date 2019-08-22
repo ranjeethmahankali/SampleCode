@@ -10,17 +10,15 @@ class convex_hull
 private:
 	std::unordered_map<size_t, triangle> _triangles;
 	std::unordered_set<size_t> _outsidePts;
-	std::unordered_map<size_t, std::unordered_set<size_t>> _edgeFaceMap;
+	std::unordered_map<indexPair, std::unordered_set<size_t>> _edgeFaceMap;
 
 	vec3 *_pts, _center;
 	size_t _nPts;
 
 	void compute();
 	
-	void getEdgeIndices(const triangle& tri, size_t indices[3]) const;
-	void getVertIndicesForEdge(size_t edgeI, size_t& v1, size_t& v2) const;
 	void setTriangle(triangle& tri);
-	triangle popTriangle(size_t index, size_t edgeIndices[3],
+	triangle popTriangle(size_t index, indexPair edges[3],
 		size_t adjTriangles[3]);
 	bool isTriangleFacing(size_t iTri, const vec3& pt, triangle& tri);
 	bool isTriangleFacing(const triangle& tri, const vec3& pt) const;

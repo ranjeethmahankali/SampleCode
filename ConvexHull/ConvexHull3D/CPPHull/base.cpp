@@ -135,7 +135,7 @@ triangle::triangle(size_t i, size_t v1, size_t v2, size_t v3)
 bool triangle::isValid() const {
 	// Normally we would check if the numbers are > -1. but because size_t is unsigned. -1 causes integer underflow
 	// resulting in a huge number whenever we assign -1 to a size_t type. so here we check the opposite i.e. <.
-	return index < -1 && a < -1 && b < -1 && c < -1;
+	return index < -1 && a < -1 && b < -1 && c < -1 && a != b && b != c && c != a;
 }
 
 void triangle::flip() {
@@ -152,6 +152,21 @@ triangle triangle::flipped() const {
 	return tri;
 }
 
+indexPair triangle::edge(char edgeIndex) const
+{
+	switch (edgeIndex)
+	{
+	case 0:
+		return indexPair(a, b);
+	case 1:
+		return indexPair(b, c);
+	case 2:
+		return indexPair(c, a);
+	default:
+		throw "Invalid edge index";
+	}
+}
+
 size_t util::factorial(size_t n) {
 	return n == 1 ? n : n * util::factorial(n - 1);
 }
@@ -162,4 +177,19 @@ double util::tetVolume(vec3 a, vec3 b, vec3 c, vec3 d) {
 
 PINVOKE void Unsafe_ReleaseIntArray(int* arr) {
 	delete[] arr;
+}
+
+bool indexPair::operator==(const indexPair other) const
+{
+	return (p == other.p && q == other.q) || (p == other.q && q == other.p);
+}
+
+bool indexPair::operator!=(const indexPair other) const
+{
+	return (p != other.p && p != other.q) || (q != other.p && q != other.q);
+}
+
+size_t indexPair::hash() const
+{
+	return p + q + p * q;
 }

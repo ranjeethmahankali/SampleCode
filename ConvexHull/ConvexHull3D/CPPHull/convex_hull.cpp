@@ -15,7 +15,7 @@ convex_hull::convex_hull(double* pts, size_t nPts) {
 	_center = vec3::average(_pts, _nPts);
 
 	_triangles = std::unordered_map<size_t, triangle>();
-	_edgeFaceMap = std::unordered_map<size_t, std::unordered_set<size_t>>();
+	_edgeFaceMap = std::unordered_map<indexPair, std::unordered_set<size_t>>();
 	compute();
 }
 
@@ -62,12 +62,6 @@ double convex_hull::trianglePlaneDist(size_t iTri, const vec3& pt, triangle& tri
 	return (pt - _pts[tri.a]) * tri.normal;
 }
 
-void convex_hull::getEdgeIndices(const triangle& tri, size_t indices[3]) const {
-	indices[0] = std::min(tri.a, tri.b) * _nPts + std::max(tri.a, tri.b);
-	indices[1] = std::min(tri.b, tri.c) * _nPts + std::max(tri.b, tri.c);
-	indices[2] = std::min(tri.c, tri.a) * _nPts + std::max(tri.c, tri.a);
-}
-
 void convex_hull::setTriangle(triangle& tri) {
 	tri.normal = ((_pts[tri.b] - _pts[tri.a]) ^ (_pts[tri.c] - _pts[tri.a])).unit();
 	if (isTriangleFacing(tri, _center)) {
@@ -75,16 +69,14 @@ void convex_hull::setTriangle(triangle& tri) {
 	}
 
 	_triangles.insert_or_assign(tri.index, tri);
-	size_t eis[3];
-	getEdgeIndices(tri, eis);
 
-	for (size_t ei = 0; ei < 3; ei++)
+	for (char ei = 0; ei < 3; ei++)
 	{
-		_edgeFaceMap[eis[ei]].insert(tri.index);
+		_edgeFaceMap[tri.edge(ei)].insert(tri.index);
 	}
 }
 
-triangle convex_hull::popTriangle(size_t index, size_t edgeIndices[3],
+triangle convex_hull::popTriangle(size_t index, indexPair edges[3],
 	size_t adjTriangles[3]) {
 
 	triangle tri;
@@ -93,12 +85,14 @@ triangle convex_hull::popTriangle(size_t index, size_t edgeIndices[3],
 		tri = match->second;
 		std::unordered_set<size_t> triSet;
 		_triangles.erase(index);
-		getEdgeIndices(tri, edgeIndices);
-		for (size_t ei = 0; ei < 3; ei++)
+		indexPair edge;
+		for (char ei = 0; ei < 3; ei++)
 		{
-			_edgeFaceMap[edgeIndices[ei]].erase(index);
-			triSet = _edgeFaceMap[edgeIndices[ei]];
+			edge = tri.edge(ei);
+			_edgeFaceMap[edge].erase(index);
+			triSet = _edgeFaceMap[edge];
 			adjTriangles[ei] = triSet.size() == 1 ? *triSet.begin() : -1;
+			edges[ei] = edge;
 		}
 	}
 
@@ -207,11 +201,6 @@ void convex_hull::updateInteriorPoints(std::vector<size_t>::iterator newTrStart,
 	}
 }
 
-void convex_hull::getVertIndicesForEdge(size_t edgeI, size_t& v1, size_t& v2) const {
-	v2 = edgeI % _nPts;
-	v1 = (edgeI - v2) / _nPts;
-}
-
 PINVOKE void Unsafe_ComputeHull(double* pts, size_t nPoints,
 	int*& triangles, int& nTriangles) {
 
@@ -222,65 +211,113 @@ PINVOKE void Unsafe_ComputeHull(double* pts, size_t nPoints,
 }
 
 void convex_hull::createInitialSimplex(size_t& triI) {
-	size_t bounds[6];
-	double extremes[6];
-	for (size_t ei = 0; ei < 6; ei++)
-	{
-		extremes[ei] = ei % 2 == 0 ? doubleMaxValue : doubleMinValue;
-		bounds[ei] = -1;
+	size_t best[4];
+	if (_nPts < 4) {
+		throw "Cannot create the initial simplex";
 	}
-
-	double coords[3];
-	for (size_t pi = 0; pi < _nPts; pi++)
-	{
-		_pts[pi].copyTo(coords);
+	else if (_nPts == 4) {
+		for (size_t i = 0; i < 4; i++)
+		{
+			best[i] = i;
+		}
+	}
+	else {
+		double extremes[6];
 		for (size_t ei = 0; ei < 6; ei++)
 		{
-			if (ei % 2 == 0 && extremes[ei] > coords[ei / 2]) {
-				extremes[ei] = coords[ei / 2];
-				bounds[ei] = pi;
-			}
-			else if (ei % 2 == 1 && extremes[ei] < coords[ei / 2]) {
-				extremes[ei] = coords[ei / 2];
-				bounds[ei] = pi;
-			}
+			extremes[ei] = ei % 2 == 0 ? doubleMaxValue : doubleMinValue;
 		}
-	}
 
-	std::vector<size_t*> combs;
-	util::combinations<size_t>(bounds, 4, 6, combs);
-
-	size_t best[4]{-1, -1, -1, -1};
-	double maxVol = doubleMinValue, vol;
-	size_t* com;
-	for (size_t i = 0; i < combs.size(); i++)
-	{
-		com = combs[i];
-		vol = util::tetVolume(_pts[com[0]], _pts[com[1]], _pts[com[2]], _pts[com[3]]);
-		if (vol > maxVol) {
-			for (size_t j = 0; j < 4; j++)
+		size_t bounds[6] = {-1, -1, -1, -1, -1, -1};
+		double coords[3];
+		for (size_t pi = 0; pi < _nPts; pi++)
+		{
+			_pts[pi].copyTo(coords);
+			for (size_t ei = 0; ei < 6; ei++)
 			{
-				best[j] = com[j];
+				if (ei % 2 == 0 && extremes[ei] > coords[ei / 2]) {
+					extremes[ei] = coords[ei / 2];
+					bounds[ei] = pi;
+				}
+				else if (ei % 2 == 1 && extremes[ei] < coords[ei / 2]) {
+					extremes[ei] = coords[ei / 2];
+					bounds[ei] = pi;
+				}
 			}
-			maxVol = vol;
 		}
-		delete[] combs[i];
+
+		vec3 pt;
+		double maxD = doubleMinValue, dist;
+		for (size_t i = 0; i < 6; i++)
+		{
+			pt = _pts[bounds[i]];
+			for (size_t j = i + 1; j < 6; j++)
+			{
+				dist = (pt - _pts[bounds[j]]).lenSq();
+				if (dist > maxD) {
+					best[0] = bounds[i];
+					best[1] = bounds[j];
+					maxD = dist;
+				}
+			}
+		}
+
+		if (maxD <= 0) {
+			throw "Failed to create initial simplex";
+		}
+
+		maxD = doubleMinValue;
+		vec3 ref = _pts[best[0]];
+		vec3 uDir = (_pts[best[1]] - ref).unit();
+		for (size_t pi = 0; pi < _nPts; pi++)
+		{
+			dist = ((_pts[pi] - ref) - uDir * (uDir * (_pts[pi] - ref))).lenSq();
+			if (dist > maxD) {
+				best[2] = pi;
+				maxD = dist;
+			}
+		}
+
+		if (maxD <= 0) {
+			throw "Failed to create initial simplex";
+		}
+
+		maxD = doubleMinValue;
+		uDir = ((_pts[best[1]] - ref) ^ (_pts[best[2]] - ref)).unit();
+		for (size_t pi = 0; pi < _nPts; pi++)
+		{
+			dist = abs(uDir * (_pts[pi] - ref));
+			if (dist > maxD) {
+				best[3] = pi;
+				maxD = dist;
+			}
+		}
+
+		if (maxD <= 0) {
+			throw "Failed to create initial simplex";
+		}
 	}
 
-	_center = (_pts[best[0]] + _pts[best[1]] + _pts[best[2]] + 
-		_pts[best[3]]) / 4;
+	triangle simplex[4];
+	simplex[0] = triangle(triI++, best[0], best[1], best[2]);
+	simplex[1] = triangle(triI++, best[0], best[2], best[3]);
+	simplex[2] = triangle(triI++, best[1], best[2], best[3]);
+	simplex[3] = triangle(triI++, best[0], best[1], best[3]);
 
-	triangle simplex[4]{
-		triangle(triI++, best[0], best[1], best[2]),
-		triangle(triI++, best[0], best[2], best[3]),
-		triangle(triI++, best[1], best[2], best[3]),
-		triangle(triI++, best[0], best[1], best[3])
-	};
+	_center = vec3::zero;
+	for (size_t i = 0; i < 4; i++)
+	{
+		_center += _pts[best[i]];
+	}
+	_center /= 4;
 
 	std::vector<size_t> newTris;
 	newTris.reserve(4);
 	for (size_t i = 0; i < 4; i++)
 	{
+		if (!simplex[i].isValid()) {
+			continue;
+		}
 		setTriangle(simplex[i]);
 		newTris.push_back(simplex[i].index);
 	}
@@ -301,12 +338,12 @@ void convex_hull::compute() {
 	size_t iTri, fpi;
 	vec3 fpt, normal;
 	triangle cTri, tri2, newTri, popTri;
-	size_t adjTri[3], adjEdges[3];
+	size_t adjTri[3];
+	indexPair adjEdges[3];
 	std::queue<size_t> popQ = std::queue<size_t>();
-	std::vector<size_t> horizonIndices = std::vector<size_t>();
-	std::vector<size_t>::iterator hIter;
+	std::vector<indexPair> horizonIndices = std::vector<indexPair>();
+	std::vector<indexPair>::iterator edgeIter;
 	std::vector<size_t> newTriangles, popped;
-	size_t ev1, ev2;
 	vec3 avg;
 	while (!gQue.empty())
 	{
@@ -347,30 +384,28 @@ void convex_hull::compute() {
 			}
 		}
 
-		hIter = horizonIndices.begin();
+		edgeIter = horizonIndices.begin();
 		avg = vec3(0, 0, 0);
-		while (hIter != horizonIndices.end()) {
-			getVertIndicesForEdge(*hIter, ev1, ev2);
-			avg += getPt(ev1);
-			avg += getPt(ev2);
-			hIter++;
+		while (edgeIter != horizonIndices.end()) {
+			avg += getPt(edgeIter->p);
+			avg += getPt(edgeIter->q);
+			edgeIter++;
 		}
 		avg /= 2 * horizonIndices.size();
 
 		newTriangles.clear();
 		newTriangles.reserve(horizonIndices.size());
-		hIter = horizonIndices.begin();
-		while (hIter != horizonIndices.end())
+		edgeIter = horizonIndices.begin();
+		while (edgeIter != horizonIndices.end())
 		{
-			getVertIndicesForEdge(*hIter, ev1, ev2);
-			newTri = triangle(curTriIndex++, fpi, ev1, ev2);
-			if (((getPt(ev1) - fpt) ^ (getPt(ev2) - fpt)) * (avg - fpt) > 0) {
+			newTri = triangle(curTriIndex++, fpi, edgeIter->p, edgeIter->q);
+			if (((getPt(edgeIter->p) - fpt) ^ (getPt(edgeIter->q) - fpt)) * (avg - fpt) > 0) {
 				newTri.flip();
 			}
 			setTriangle(newTri);
 			newTriangles.push_back(newTri.index);
 			gQue.push(newTri.index);
-			hIter++;
+			edgeIter++;
 		}
 		updateInteriorPoints(newTriangles.begin(), newTriangles.end(), popped.begin(), popped.end());
 	}
