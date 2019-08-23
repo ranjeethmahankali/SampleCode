@@ -2,7 +2,7 @@
 
 convex_hull::convex_hull(double* pts, size_t nPts) {
 	m_pts = new vec3[nPts];
-	m_outsidePts = std::unordered_set<size_t>();
+	m_outsidePts = std::unordered_set<size_t, custom_size_t_hash, std::equal_to<size_t>>();
 	for (size_t i = 0; i < nPts; i++)
 	{
 		m_pts[i].x = pts[3 * i];
@@ -46,15 +46,8 @@ void convex_hull::get_all_faces(int* triIndices) {
 	}
 }
 
-double convex_hull::face_plane_dist(size_t iTri, const vec3& pt, tri_face& tri){
-	auto match = m_faces.find(iTri);
-	if (match == m_faces.end()) {
-		tri = tri_face(-1, -1, -1, -1);
-		return doubleMinValue;
-	}
-	tri = match->second;
-
-	return (pt - m_pts[tri.a]) * tri.normal;
+double convex_hull::face_plane_dist(const tri_face& face, const vec3& pt){
+	return (pt - m_pts[face.a]) * face.normal;
 }
 
 void convex_hull::set_face(tri_face& tri) {
@@ -74,7 +67,7 @@ void convex_hull::set_face(tri_face& tri) {
 }
 
 tri_face convex_hull::pop_face(size_t index, index_pair edges[3],
-	size_t adjFaceIndices[3]) {
+	tri_face adjFaces[3]) {
 
 	tri_face tri;
 	auto match = m_faces.find(index);
@@ -83,30 +76,24 @@ tri_face convex_hull::pop_face(size_t index, index_pair edges[3],
 		m_faces.erase(index);
 		index_pair edge;
 		index_pair fPair;
+		size_t adjFi;
 		for (char ei = 0; ei < 3; ei++)
 		{
 			edge = tri.edge(ei);
+			edges[ei] = edge;
 			if (!get_edge_faces(edge, fPair) || !fPair.contains(index)) {
 				continue;
 			}
 			fPair.unset(index);
-			adjFaceIndices[ei] = fPair.p == -1 ? fPair.q : fPair.p;
-			edges[ei] = edge;
 			m_edgeFaceMap[edge] = fPair;
+			adjFi = fPair.p == -1 ? fPair.q : fPair.p;
+			if (!get_face(adjFi, adjFaces[ei])) {
+				adjFaces[ei] = tri_face::unset;
+			}
 		}
 	}
 
 	return tri;
-}
-
-bool convex_hull::is_face_visible(size_t iTri, const vec3& pt, tri_face& tri) {
-	auto match = m_faces.find(iTri);
-	if (match == m_faces.end()) {
-		tri = tri_face(-1, -1, -1, -1);
-		return false;
-	}
-	tri = match->second;
-	return ((tri.normal * (pt - m_pts[tri.a])) > 0);
 }
 
 bool convex_hull::is_face_visible(const tri_face& tri, const vec3& pt) const {
@@ -118,12 +105,12 @@ double convex_hull::face_solid_angle(const tri_face& tri, const vec3& pt) const 
 	return vec3::solid_angle(m_pts[tri.a] - pt, m_pts[tri.b] - pt, m_pts[tri.c] - pt);
 }
 
-size_t convex_hull::farthest_pt(size_t iTri, tri_face& tri) {
+size_t convex_hull::farthest_pt(const tri_face& face) {
 	size_t farthest = -1;
 	double dMax = PLANE_DIST_TOL, dist;
 	for (const size_t& i : m_outsidePts) {
-		dist = face_plane_dist(iTri, m_pts[i], tri);
-		if (i == tri.a || i == tri.b || i == tri.c) {
+		dist = face_plane_dist(face, m_pts[i]);
+		if (i == face.a || i == face.b || i == face.c) {
 			continue;
 		}
 		if (dist > dMax) {
@@ -134,28 +121,23 @@ size_t convex_hull::farthest_pt(size_t iTri, tri_face& tri) {
 	return farthest;
 }
 
-void convex_hull::update_interior_points(std::vector<size_t>::iterator newTrStart,
-	std::vector<size_t>::iterator newTrEnd, std::vector<size_t>::iterator popStart,
-	std::vector<size_t>::iterator popEnd) {
-	
+void convex_hull::update_interior_points(const std::vector<size_t>& newFaces, const std::vector<tri_face>& poppedFaces) {
 	std::vector<size_t> remove, check;
 	auto iter1 = m_outsidePts.begin();
-	std::vector<size_t>::iterator iter2;
-	std::unordered_map<size_t, tri_face>::iterator match;
+	std::vector<tri_face>::const_iterator iter2;
+	std::vector<size_t>::const_iterator iter3;
+	tri_face face;
+	vec3 testPt;
 	bool outside;
 	while (iter1 != m_outsidePts.end()) {
 		outside = false;
-		iter2 = popStart;
-		while (iter2 != popEnd) {
-			match = m_faces.find(*iter2);
-			if (match == m_faces.end()) {
-				iter2++;
-				continue;
-			}
-			if (*iter1 == match->second.a || *iter1 == match->second.b || *iter1 == match->second.c) {
+		testPt = m_pts[*iter1];
+		iter2 = poppedFaces.begin();
+		while (iter2 != poppedFaces.end()) {
+			if (*iter1 == iter2->a || *iter1 == iter2->b || *iter1 == iter2->c) {
 				remove.push_back(*iter1);
 			}
-			if ((match->second.normal * (m_pts[*iter1] - m_pts[match->second.a])) > PLANE_DIST_TOL) {
+			if ((iter2->normal * (testPt - m_pts[iter2->a])) > PLANE_DIST_TOL) {
 				outside = true;
 				break;
 			}
@@ -172,18 +154,16 @@ void convex_hull::update_interior_points(std::vector<size_t>::iterator newTrStar
 	auto itCheck = check.begin();
 	while (itCheck != check.end()) {
 		outside = false;
-		iter2 = newTrStart;
-		while (iter2 != newTrEnd) {
-			match = m_faces.find(*iter2);
-			if (match == m_faces.end()) {
-				iter2++;
+		iter3 = newFaces.begin();
+		while (iter3 != newFaces.end()) {
+			if (!get_face(*iter3, face)) {
 				continue;
 			}
-			if ((match->second.normal * (m_pts[*itCheck] - m_pts[match->second.a])) > PLANE_DIST_TOL) {
+			if ((face.normal * (m_pts[*itCheck] - m_pts[face.a])) > PLANE_DIST_TOL) {
 				outside = true;
 				break;
 			}
-			iter2++;
+			iter3++;
 		}
 
 		if (!outside) {
@@ -193,21 +173,12 @@ void convex_hull::update_interior_points(std::vector<size_t>::iterator newTrStar
 		itCheck++;
 	}
 
-	auto iter3 = remove.begin();
-	while (iter3 != remove.end())
+	auto iter4 = remove.begin();
+	while (iter4 != remove.end())
 	{
-		m_outsidePts.erase(*iter3);
-		iter3++;
+		m_outsidePts.erase(*iter4);
+		iter4++;
 	}
-}
-
-PINVOKE void Unsafe_ComputeHull(double* pts, size_t nPoints,
-	int*& triangles, int& nTriangles) {
-
-	convex_hull hull(pts, nPoints);
-	nTriangles = hull.num_faces();
-	triangles = new int[hull.num_faces() * 3];
-	hull.get_all_faces(triangles);
 }
 
 void convex_hull::create_initial_simplex(size_t& ti) {
@@ -322,7 +293,7 @@ void convex_hull::create_initial_simplex(size_t& ti) {
 		newTris.push_back(simplex[i].index);
 	}
 
-	update_interior_points(newTris.begin(), newTris.end(), newTris.begin(), newTris.end());
+	update_interior_points(newTris, std::vector<tri_face>());
 }
 
 bool convex_hull::get_face(size_t fi, tri_face& face)
@@ -354,6 +325,11 @@ bool convex_hull::get_edge_faces(index_pair edge, tri_face& face1, tri_face& fac
 	return false;
 }
 
+vec3 convex_hull::face_center(const tri_face& face)
+{
+	return (m_pts[face.a] + m_pts[face.b] + m_pts[face.c]) / 3;
+}
+
 void convex_hull::compute() {
 	size_t curTi = 0;
 	create_initial_simplex(curTi);
@@ -366,21 +342,25 @@ void convex_hull::compute() {
 
 	size_t ti, fpi;
 	vec3 fpt, normal;
-	tri_face cTri, tri2, newTri, popTri;
-	size_t adjTri[3];
+	tri_face cTri, tri2, newFace, popTri;
+	tri_face adjTri[3];
 	index_pair adjEdges[3];
 	std::queue<size_t> popQ = std::queue<size_t>();
 	std::vector<index_pair> horizonIndices = std::vector<index_pair>();
 	std::vector<index_pair>::iterator edgeIter;
-	std::vector<size_t> newTriangles, popped;
+	std::vector<size_t> newFaceIndices;
+	std::vector<tri_face> popped;
 	vec3 avg;
 	while (!gQue.empty())
 	{
 		ti = gQue.front();
 		gQue.pop();
-		fpi = farthest_pt(ti, cTri);
+		if (!get_face(ti, cTri)) {
+			continue;
+		}
+		fpi = farthest_pt(cTri);
 		normal = cTri.normal;
-		if (fpi == -1 || !cTri.is_valid()) {
+		if (fpi == -1) {
 			continue;
 		}
 		fpt = m_pts[fpi];
@@ -397,15 +377,15 @@ void convex_hull::compute() {
 				continue;
 			}
 
-			popped.push_back(popTri.index);
+			popped.push_back(popTri);
 
 			for (size_t ti = 0; ti < 3; ti++)
 			{
-				if (adjTri[ti] == -1) {
+				if (!adjTri[ti].is_valid()) {
 					continue;
 				}
-				if (is_face_visible(adjTri[ti], fpt, tri2)) {
-					popQ.push(adjTri[ti]);
+				if (is_face_visible(adjTri[ti], fpt)) {
+					popQ.push(adjTri[ti].index);
 				}
 				else {
 					horizonIndices.push_back(adjEdges[ti]);
@@ -414,28 +394,28 @@ void convex_hull::compute() {
 		}
 
 		edgeIter = horizonIndices.begin();
-		avg = vec3(0, 0, 0);
-		while (edgeIter != horizonIndices.end()) {
-			avg += get_pt(edgeIter->p);
-			avg += get_pt(edgeIter->q);
-			edgeIter++;
-		}
-		avg /= 2 * horizonIndices.size();
+		avg = face_center(cTri);
 
-		newTriangles.clear();
-		newTriangles.reserve(horizonIndices.size());
+		newFaceIndices.clear();
+		newFaceIndices.reserve(horizonIndices.size());
 		edgeIter = horizonIndices.begin();
 		while (edgeIter != horizonIndices.end())
 		{
-			newTri = tri_face(curTi++, fpi, edgeIter->p, edgeIter->q);
-			if (((get_pt(edgeIter->p) - fpt) ^ (get_pt(edgeIter->q) - fpt)) * (avg - fpt) > 0) {
-				newTri.flip();
-			}
-			set_face(newTri);
-			newTriangles.push_back(newTri.index);
-			gQue.push(newTri.index);
+			newFace = tri_face(curTi++, fpi, edgeIter->p, edgeIter->q);
+			set_face(newFace);
+			newFaceIndices.push_back(newFace.index);
+			gQue.push(newFace.index);
 			edgeIter++;
 		}
-		update_interior_points(newTriangles.begin(), newTriangles.end(), popped.begin(), popped.end());
+		update_interior_points(newFaceIndices, popped);
 	}
+}
+
+PINVOKE void Unsafe_ComputeHull(double* pts, size_t nPoints,
+	int*& triangles, int& nTriangles) {
+
+	convex_hull hull(pts, nPoints);
+	nTriangles = hull.num_faces();
+	triangles = new int[hull.num_faces() * 3];
+	hull.get_all_faces(triangles);
 }

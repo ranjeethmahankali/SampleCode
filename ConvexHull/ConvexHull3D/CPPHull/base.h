@@ -69,6 +69,7 @@ struct index_pair {
 };
 
 struct tri_face {
+	static const tri_face unset;
 	size_t index;
 	size_t a, b, c;
 	vec3 normal;

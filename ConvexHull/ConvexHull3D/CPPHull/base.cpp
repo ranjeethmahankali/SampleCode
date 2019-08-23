@@ -2,6 +2,7 @@
 
 const vec3 vec3::zero = vec3(0,0,0);
 const vec3 vec3::unset = vec3(doubleMaxValue, doubleMaxValue, doubleMaxValue);
+const tri_face tri_face::unset = tri_face(-1, -1, -1, -1);
 
 vec3::vec3(double a, double b, double c) {
 	x = a;
