@@ -88,7 +88,7 @@ struct index_pair_hash {
 	}
 };
 
-struct custom_long_hash {
+struct custom_size_t_hash {
 	size_t operator()(const size_t& n) const noexcept {
 		return n;
 	}

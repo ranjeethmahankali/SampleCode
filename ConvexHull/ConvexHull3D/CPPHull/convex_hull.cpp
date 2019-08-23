@@ -14,7 +14,7 @@ convex_hull::convex_hull(double* pts, size_t nPts) {
 
 	m_center = vec3::average(m_pts, m_nPts);
 
-	m_faces = std::unordered_map<size_t, tri_face>();
+	m_faces = std::unordered_map<size_t, tri_face, custom_size_t_hash, std::equal_to<size_t>>();
 	m_edgeFaceMap = std::unordered_map<index_pair, index_pair, index_pair_hash, std::equal_to<index_pair>>();
 	compute();
 }
@@ -22,11 +22,6 @@ convex_hull::convex_hull(double* pts, size_t nPts) {
 convex_hull::~convex_hull() {
 	m_faces.clear();
 	m_outsidePts.clear();
-	/*auto iter = _edgeFaceMap.begin();
-	while (iter != _edgeFaceMap.end()) {
-		iter->second.clear();
-		iter++;
-	}*/
 	m_edgeFaceMap.clear();
 	delete[] m_pts;
 }

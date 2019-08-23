@@ -10,7 +10,7 @@ constexpr double PLANE_DIST_TOL = 1e-10;
 class convex_hull
 {
 private:
-	std::unordered_map<size_t, tri_face> m_faces;
+	std::unordered_map<size_t, tri_face, custom_size_t_hash, std::equal_to<size_t>> m_faces;
 	std::unordered_set<size_t> m_outsidePts;
 	std::unordered_map<index_pair, index_pair, index_pair_hash, std::equal_to<index_pair>> m_edgeFaceMap;
 
