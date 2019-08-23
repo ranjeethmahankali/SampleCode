@@ -17,70 +17,70 @@ struct vec3 {
 	static const vec3 zero;
 	static const vec3 unset;
 
-	vec3(double a, double b, double c);
+	vec3(double, double, double);
 	vec3();
 
-	vec3 operator+(const vec3& v) const;
-	vec3 operator-(const vec3& v) const;
-	double operator*(const vec3& v) const;
-	vec3 operator^(const vec3& v) const;
-	vec3 operator*(const double& s) const;
-	vec3 operator/(const double& s) const;
-	bool operator==(const vec3& v) const;
-	bool operator!=(const vec3& v) const;
-	vec3 operator+=(const vec3& v);
-	vec3 operator-=(const vec3& v);
-	vec3 operator/=(const double& s);
-	vec3 operator*=(const double&s);
+	vec3 operator+(const vec3&) const;
+	vec3 operator-(const vec3&) const;
+	double operator*(const vec3&) const;
+	vec3 operator^(const vec3&) const;
+	vec3 operator*(const double&) const;
+	vec3 operator/(const double&) const;
+	bool operator==(const vec3&) const;
+	bool operator!=(const vec3&) const;
+	vec3 operator+=(const vec3&);
+	vec3 operator-=(const vec3&);
+	vec3 operator/=(const double&);
+	vec3 operator*=(const double&);
 
 	vec3 operator-() const;
 
-	double lenSq() const;
+	double len_sq() const;
 	double len() const;
-	void copyTo(double* dest, size_t& pos) const;
-	void copyTo(double dest[3]) const;
-	bool isZero() const;
-	bool isValid() const;
+	void copy(double* dest, size_t& pos) const;
+	void copy(double dest[3]) const;
+	bool is_zero() const;
+	bool is_valid() const;
 	vec3 unit() const;
 
-	static double solidAngle(const vec3& a, const vec3& b, const vec3& c);
+	static double solid_angle(const vec3&, const vec3&, const vec3&);
 	static vec3 sum(vec3* vecs, const size_t& nVecs);
 	static vec3 average(vec3* vecs, const size_t& nVecs);
 };
 
-struct indexPair {
+struct index_pair {
 	size_t p, q;
 
-	bool operator==(const indexPair other) const;
-	bool operator!=(const indexPair other) const;
+	bool operator==(const index_pair) const;
+	bool operator!=(const index_pair) const;
 
-	indexPair(size_t i, size_t j)
+	index_pair(size_t i, size_t j)
 		: p(i), q(j) {}
 
-	indexPair()
-		: indexPair(-1, -1) {}
+	index_pair()
+		: index_pair(-1, -1) {}
 
 	size_t hash() const;
 };
 
-struct triangle {
+struct tri_face {
 	size_t index;
 	size_t a, b, c;
 	vec3 normal;
 
-	triangle();
-	triangle(size_t i, size_t v1, size_t v2, size_t v3);
+	tri_face();
+	tri_face(size_t i, size_t v1, size_t v2, size_t v3);
 
-	bool isValid() const;
+	bool is_valid() const;
 	void flip();
-	triangle flipped() const;
-	indexPair edge(char edgeIndex) const;
+	tri_face flipped() const;
+	index_pair edge(char edgeIndex) const;
 };
 
 
 namespace std {
-	template<> struct hash<indexPair> {
-		typedef indexPair argument_type;
+	template<> struct hash<index_pair> {
+		typedef index_pair argument_type;
 		typedef size_t result_type;
 		result_type operator()(const argument_type& pair) const noexcept {
 			return pair.hash();
@@ -88,12 +88,10 @@ namespace std {
 	};
 }
 
-
-
 class util {
 public:
-	static double tetVolume(vec3 a, vec3 b, vec3 c, vec3 d);
-	static size_t factorial(size_t n);
+	static double tet_volume(const vec3&, const vec3&, const vec3&, const vec3&);
+	static size_t factorial(size_t);
 };
 
 PINVOKE void Unsafe_ReleaseIntArray(int* arr);

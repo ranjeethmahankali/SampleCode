@@ -76,41 +76,41 @@ vec3 vec3::operator /=(const double& s) {
 	return *this;
 }
 
-double vec3::lenSq() const {
+double vec3::len_sq() const {
 	return x * x + y * y + z * z;
 }
 
 double vec3::len() const  {
-	return sqrt(lenSq());
+	return sqrt(len_sq());
 }
 
-void vec3::copyTo(double* dest, size_t& pos) const  {
+void vec3::copy(double* dest, size_t& pos) const  {
 	dest[pos++] = x;
 	dest[pos++] = y;
 	dest[pos++] = z;
 }
 
-void vec3::copyTo(double dest[3]) const {
+void vec3::copy(double dest[3]) const {
 	dest[0] = x;
 	dest[1] = y;
 	dest[2] = z;
 }
 
-double vec3::solidAngle(const vec3& a, const vec3& b, const vec3& c) {
+double vec3::solid_angle(const vec3& a, const vec3& b, const vec3& c) {
 	return abs(((a ^ b) * c) / (a.len() * b.len() * c.len() + (a * b) * c.len() +
 		(b * c) * a.len() + (c * a) * c.len()));
 }
 
-bool vec3::isZero() const {
+bool vec3::is_zero() const {
 	return x == 0 && y == 0 && z == 0;
 }
 
-bool vec3::isValid() const {
+bool vec3::is_valid() const {
 	return x != vec3::unset.x && y != vec3::unset.y && z != vec3::unset.z;
 }
 
 vec3 vec3::unit() const {
-	return isZero() ? zero : vec3(x, y, z) / len();
+	return is_zero() ? zero : vec3(x, y, z) / len();
 }
 
 vec3 vec3::sum(vec3* vecs, const size_t& nVecs) {
@@ -127,18 +127,18 @@ vec3 vec3::average(vec3* vecs, const size_t& nVecs) {
 	return sum(vecs, nVecs) / nVecs;
 }
 
-triangle::triangle() : triangle::triangle(-1, -1, -1, -1) { }
+tri_face::tri_face() : tri_face::tri_face(-1, -1, -1, -1) { }
 
-triangle::triangle(size_t i, size_t v1, size_t v2, size_t v3)
+tri_face::tri_face(size_t i, size_t v1, size_t v2, size_t v3)
 	: a(v1), b(v2), c(v3), index(i), normal(vec3::unset) {}
 
-bool triangle::isValid() const {
+bool tri_face::is_valid() const {
 	// Normally we would check if the numbers are > -1. but because size_t is unsigned. -1 causes integer underflow
 	// resulting in a huge number whenever we assign -1 to a size_t type. so here we check the opposite i.e. <.
 	return index < -1 && a < -1 && b < -1 && c < -1 && a != b && b != c && c != a;
 }
 
-void triangle::flip() {
+void tri_face::flip() {
 	size_t temp;
 	temp = b;
 	b = c;
@@ -146,22 +146,22 @@ void triangle::flip() {
 	normal = -normal;
 }
 
-triangle triangle::flipped() const {
-	triangle tri = triangle(index, a, b, c);
+tri_face tri_face::flipped() const {
+	tri_face tri = tri_face(index, a, b, c);
 	tri.flip();
 	return tri;
 }
 
-indexPair triangle::edge(char edgeIndex) const
+index_pair tri_face::edge(char edgeIndex) const
 {
 	switch (edgeIndex)
 	{
 	case 0:
-		return indexPair(a, b);
+		return index_pair(a, b);
 	case 1:
-		return indexPair(b, c);
+		return index_pair(b, c);
 	case 2:
-		return indexPair(c, a);
+		return index_pair(c, a);
 	default:
 		throw "Invalid edge index";
 	}
@@ -171,7 +171,7 @@ size_t util::factorial(size_t n) {
 	return n == 1 ? n : n * util::factorial(n - 1);
 }
 
-double util::tetVolume(vec3 a, vec3 b, vec3 c, vec3 d) {
+double util::tet_volume(const vec3& a, const vec3& b, const vec3& c, const vec3& d) {
 	return std::abs(((b - a) ^ (c - a)) * (d - a)) / 6;
 }
 
@@ -179,17 +179,17 @@ PINVOKE void Unsafe_ReleaseIntArray(int* arr) {
 	delete[] arr;
 }
 
-bool indexPair::operator==(const indexPair other) const
+bool index_pair::operator==(const index_pair other) const
 {
 	return (p == other.p && q == other.q) || (p == other.q && q == other.p);
 }
 
-bool indexPair::operator!=(const indexPair other) const
+bool index_pair::operator!=(const index_pair other) const
 {
 	return (p != other.p && p != other.q) || (q != other.p && q != other.q);
 }
 
-size_t indexPair::hash() const
+size_t index_pair::hash() const
 {
 	return p + q + p * q;
 }
