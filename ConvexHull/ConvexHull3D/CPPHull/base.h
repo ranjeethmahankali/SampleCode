@@ -6,6 +6,7 @@
 #include <unordered_set>
 #include <unordered_map>
 #include <set>
+#include <utility>
 #include <algorithm>
 
 #define PINVOKE extern "C" __declspec(dllexport)
@@ -61,6 +62,10 @@ struct index_pair {
 		: index_pair(-1, -1) {}
 
 	size_t hash() const;
+	void unset(size_t);
+	bool set(size_t val);
+	void set(size_t val, char pos);
+	bool contains(size_t);
 };
 
 struct tri_face {
@@ -77,16 +82,17 @@ struct tri_face {
 	index_pair edge(char edgeIndex) const;
 };
 
+struct index_pair_hash {
+	size_t operator()(const index_pair& pair) const noexcept {
+		return pair.hash();
+	}
+};
 
-namespace std {
-	template<> struct hash<index_pair> {
-		typedef index_pair argument_type;
-		typedef size_t result_type;
-		result_type operator()(const argument_type& pair) const noexcept {
-			return pair.hash();
-		}
-	};
-}
+struct custom_long_hash {
+	size_t operator()(const size_t& n) const noexcept {
+		return n;
+	}
+};
 
 class util {
 public:

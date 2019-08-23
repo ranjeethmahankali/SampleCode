@@ -15,7 +15,7 @@ convex_hull::convex_hull(double* pts, size_t nPts) {
 	m_center = vec3::average(m_pts, m_nPts);
 
 	m_faces = std::unordered_map<size_t, tri_face>();
-	m_edgeFaceMap = std::unordered_map<index_pair, std::unordered_set<size_t>>();
+	m_edgeFaceMap = std::unordered_map<index_pair, index_pair, index_pair_hash, std::equal_to<index_pair>>();
 	compute();
 }
 
@@ -72,27 +72,32 @@ void convex_hull::set_face(tri_face& tri) {
 
 	for (char ei = 0; ei < 3; ei++)
 	{
-		m_edgeFaceMap[tri.edge(ei)].insert(tri.index);
+		if (!m_edgeFaceMap[tri.edge(ei)].set(tri.index)) {
+			throw "failed to set the face to the edge.";
+		}
 	}
 }
 
 tri_face convex_hull::pop_face(size_t index, index_pair edges[3],
-	size_t adjTriangles[3]) {
+	size_t adjFaceIndices[3]) {
 
 	tri_face tri;
 	auto match = m_faces.find(index);
 	if (match != m_faces.end()) {
 		tri = match->second;
-		std::unordered_set<size_t> triSet;
 		m_faces.erase(index);
 		index_pair edge;
+		index_pair fPair;
 		for (char ei = 0; ei < 3; ei++)
 		{
 			edge = tri.edge(ei);
-			m_edgeFaceMap[edge].erase(index);
-			triSet = m_edgeFaceMap[edge];
-			adjTriangles[ei] = triSet.size() == 1 ? *triSet.begin() : -1;
+			if (!get_edge_faces(edge, fPair) || !fPair.contains(index)) {
+				continue;
+			}
+			fPair.unset(index);
+			adjFaceIndices[ei] = fPair.p == -1 ? fPair.q : fPair.p;
 			edges[ei] = edge;
+			m_edgeFaceMap[edge] = fPair;
 		}
 	}
 
@@ -323,6 +328,35 @@ void convex_hull::create_initial_simplex(size_t& ti) {
 	}
 
 	update_interior_points(newTris.begin(), newTris.end(), newTris.begin(), newTris.end());
+}
+
+bool convex_hull::get_face(size_t fi, tri_face& face)
+{
+	auto match = m_faces.find(fi);
+	if (match != m_faces.end()) {
+		face = match->second;
+		return true;
+	}
+	return false;
+}
+
+bool convex_hull::get_edge_faces(index_pair edge, index_pair& faces)
+{
+	auto match = m_edgeFaceMap.find(edge);
+	if (match != m_edgeFaceMap.end()) {
+		faces = match->second;
+		return true;
+	}
+	return false;
+}
+
+bool convex_hull::get_edge_faces(index_pair edge, tri_face& face1, tri_face& face2)
+{
+	index_pair fPair;
+	if (get_edge_faces(edge, fPair)) {
+		return get_face(fPair.p, face1) && get_face(fPair.q, face2);
+	}
+	return false;
 }
 
 void convex_hull::compute() {

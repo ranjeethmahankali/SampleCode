@@ -12,7 +12,7 @@ class convex_hull
 private:
 	std::unordered_map<size_t, tri_face> m_faces;
 	std::unordered_set<size_t> m_outsidePts;
-	std::unordered_map<index_pair, std::unordered_set<size_t>> m_edgeFaceMap;
+	std::unordered_map<index_pair, index_pair, index_pair_hash, std::equal_to<index_pair>> m_edgeFaceMap;
 
 	vec3 *m_pts, m_center;
 	size_t m_nPts;
@@ -31,6 +31,9 @@ private:
 		std::vector<size_t>::iterator newTrEnd, std::vector<size_t>::iterator popStart,
 		std::vector<size_t>::iterator popEnd);
 	void create_initial_simplex(size_t& triIndex);
+	bool get_face(size_t fi, tri_face& face);
+	bool get_edge_faces(index_pair edge, index_pair& faces);
+	bool get_edge_faces(index_pair edge, tri_face& face1, tri_face& face2);
 
 public:
 	convex_hull(double* pts, size_t nPts);

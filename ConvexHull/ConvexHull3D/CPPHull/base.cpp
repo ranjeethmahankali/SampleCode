@@ -193,3 +193,41 @@ size_t index_pair::hash() const
 {
 	return p + q + p * q;
 }
+
+void index_pair::unset(size_t n)
+{
+	if (p == n) {
+		p = -1;
+	}
+	else if (q == n) {
+		q = -1;
+	}
+}
+
+bool index_pair::set(size_t val)
+{
+	if (p == -1) {
+		p = val;
+		return true;
+	}
+	else if (q == -1) {
+		q = val;
+		return true;
+	}
+	return false;
+}
+
+void index_pair::set(size_t val, char pos)
+{
+	if (pos == 0) {
+		p = val;
+	}
+	else if (pos == 1) {
+		q = val;
+	}
+}
+
+bool index_pair::contains(size_t n)
+{
+	return n != -1 && (n == p || n == q);
+}
