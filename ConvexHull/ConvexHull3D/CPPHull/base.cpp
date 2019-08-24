@@ -97,11 +97,6 @@ void vec3::copy(double dest[3]) const {
 	dest[2] = z;
 }
 
-double vec3::solid_angle(const vec3& a, const vec3& b, const vec3& c) {
-	return abs(((a ^ b) * c) / (a.len() * b.len() * c.len() + (a * b) * c.len() +
-		(b * c) * a.len() + (c * a) * c.len()));
-}
-
 bool vec3::is_zero() const {
 	return x == 0 && y == 0 && z == 0;
 }
@@ -147,12 +142,6 @@ void tri_face::flip() {
 	normal = -normal;
 }
 
-tri_face tri_face::flipped() const {
-	tri_face tri = tri_face(index, a, b, c);
-	tri.flip();
-	return tri;
-}
-
 index_pair tri_face::edge(char edgeIndex) const
 {
 	switch (edgeIndex)
@@ -166,14 +155,6 @@ index_pair tri_face::edge(char edgeIndex) const
 	default:
 		throw "Invalid edge index";
 	}
-}
-
-size_t util::factorial(size_t n) {
-	return n == 1 ? n : n * util::factorial(n - 1);
-}
-
-double util::tet_volume(const vec3& a, const vec3& b, const vec3& c, const vec3& d) {
-	return std::abs(((b - a) ^ (c - a)) * (d - a)) / 6;
 }
 
 PINVOKE void Unsafe_ReleaseIntArray(int* arr) {
@@ -205,7 +186,7 @@ void index_pair::unset(size_t n)
 	}
 }
 
-bool index_pair::set(size_t val)
+bool index_pair::add(size_t val)
 {
 	if (p == -1) {
 		p = val;
@@ -218,17 +199,7 @@ bool index_pair::set(size_t val)
 	return false;
 }
 
-void index_pair::set(size_t val, char pos)
-{
-	if (pos == 0) {
-		p = val;
-	}
-	else if (pos == 1) {
-		q = val;
-	}
-}
-
-bool index_pair::contains(size_t n)
+bool index_pair::contains(size_t n) const
 {
 	return n != -1 && (n == p || n == q);
 }

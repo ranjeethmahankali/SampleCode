@@ -22,15 +22,13 @@ private:
 	void set_face(tri_face& tri);
 	tri_face pop_face(size_t index, index_pair edges[3],
 		tri_face adjTriangles[3]);
-	bool is_face_visible(const tri_face& tri, const vec3& pt) const;
+	bool face_visible(const tri_face& tri, const vec3& pt) const;
 	double face_plane_dist(const tri_face& tri, const vec3& pt);
-	size_t farthest_pt(const tri_face& tri_face);
-	double face_solid_angle(const tri_face& tri, const vec3& pt) const;
+	bool get_farthest_pt(const tri_face& tri_face, vec3& pt, size_t& ptIndex);
 	void update_interior_points(const std::vector<size_t>& newFaceIndices, const std::vector<tri_face>& poppedFaces);
 	void create_initial_simplex(size_t& triIndex);
 	bool get_face(size_t fi, tri_face& face);
 	bool get_edge_faces(index_pair edge, index_pair& faces);
-	bool get_edge_faces(index_pair edge, tri_face& face1, tri_face& face2);
 	vec3 face_center(const tri_face& face);
 
 public:

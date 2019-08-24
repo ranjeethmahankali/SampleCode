@@ -44,7 +44,6 @@ struct vec3 {
 	bool is_valid() const;
 	vec3 unit() const;
 
-	static double solid_angle(const vec3&, const vec3&, const vec3&);
 	static vec3 sum(vec3* vecs, const size_t& nVecs);
 	static vec3 average(vec3* vecs, const size_t& nVecs);
 };
@@ -63,9 +62,8 @@ struct index_pair {
 
 	size_t hash() const;
 	void unset(size_t);
-	bool set(size_t val);
-	void set(size_t val, char pos);
-	bool contains(size_t);
+	bool add(size_t val);
+	bool contains(size_t) const;
 };
 
 struct tri_face {
@@ -79,7 +77,6 @@ struct tri_face {
 
 	bool is_valid() const;
 	void flip();
-	tri_face flipped() const;
 	index_pair edge(char edgeIndex) const;
 };
 
@@ -93,12 +90,6 @@ struct custom_size_t_hash {
 	size_t operator()(const size_t& n) const noexcept {
 		return n;
 	}
-};
-
-class util {
-public:
-	static double tet_volume(const vec3&, const vec3&, const vec3&, const vec3&);
-	static size_t factorial(size_t);
 };
 
 PINVOKE void Unsafe_ReleaseIntArray(int* arr);

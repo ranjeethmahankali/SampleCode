@@ -52,7 +52,7 @@ double convex_hull::face_plane_dist(const tri_face& face, const vec3& pt){
 
 void convex_hull::set_face(tri_face& tri) {
 	tri.normal = ((m_pts[tri.b] - m_pts[tri.a]) ^ (m_pts[tri.c] - m_pts[tri.a])).unit();
-	if (is_face_visible(tri, m_center)) {
+	if (face_visible(tri, m_center)) {
 		tri.flip();
 	}
 
@@ -60,8 +60,8 @@ void convex_hull::set_face(tri_face& tri) {
 
 	for (char ei = 0; ei < 3; ei++)
 	{
-		if (!m_edgeFaceMap[tri.edge(ei)].set(tri.index)) {
-			throw "failed to set the face to the edge.";
+		if (!m_edgeFaceMap[tri.edge(ei)].add(tri.index)) {
+			throw "failed to add the face to the edge.";
 		}
 	}
 }
@@ -69,17 +69,15 @@ void convex_hull::set_face(tri_face& tri) {
 tri_face convex_hull::pop_face(size_t index, index_pair edges[3],
 	tri_face adjFaces[3]) {
 
-	tri_face tri;
-	auto match = m_faces.find(index);
-	if (match != m_faces.end()) {
-		tri = match->second;
+	tri_face face;
+	if (get_face(index, face)) {
 		m_faces.erase(index);
 		index_pair edge;
 		index_pair fPair;
 		size_t adjFi;
 		for (char ei = 0; ei < 3; ei++)
 		{
-			edge = tri.edge(ei);
+			edge = face.edge(ei);
 			edges[ei] = edge;
 			if (!get_edge_faces(edge, fPair) || !fPair.contains(index)) {
 				continue;
@@ -93,20 +91,16 @@ tri_face convex_hull::pop_face(size_t index, index_pair edges[3],
 		}
 	}
 
-	return tri;
+	return face;
 }
 
-bool convex_hull::is_face_visible(const tri_face& tri, const vec3& pt) const {
-	return tri.normal.is_valid() ? ((tri.normal * (pt - m_pts[tri.a])) > 0) :
-		false;
+bool convex_hull::face_visible(const tri_face& tri, const vec3& pt) const {
+	return tri.normal.is_valid() ? ((tri.normal * (pt - m_pts[tri.a])) > 0) : false;
 }
 
-double convex_hull::face_solid_angle(const tri_face& tri, const vec3& pt) const {
-	return vec3::solid_angle(m_pts[tri.a] - pt, m_pts[tri.b] - pt, m_pts[tri.c] - pt);
-}
-
-size_t convex_hull::farthest_pt(const tri_face& face) {
-	size_t farthest = -1;
+bool convex_hull::get_farthest_pt(const tri_face& face, vec3& pt, size_t& ptIndex) {
+	ptIndex = -1;
+	pt = vec3::unset;
 	double dMax = PLANE_DIST_TOL, dist;
 	for (const size_t& i : m_outsidePts) {
 		dist = face_plane_dist(face, m_pts[i]);
@@ -115,10 +109,12 @@ size_t convex_hull::farthest_pt(const tri_face& face) {
 		}
 		if (dist > dMax) {
 			dMax = dist;
-			farthest = i;
+			ptIndex = i;
+			pt = m_pts[i];
 		}
 	}
-	return farthest;
+
+	return ptIndex != -1;
 }
 
 void convex_hull::update_interior_points(const std::vector<size_t>& newFaces, const std::vector<tri_face>& poppedFaces) {
@@ -155,11 +151,12 @@ void convex_hull::update_interior_points(const std::vector<size_t>& newFaces, co
 	while (itCheck != check.end()) {
 		outside = false;
 		iter3 = newFaces.begin();
+		testPt = m_pts[*itCheck];
 		while (iter3 != newFaces.end()) {
 			if (!get_face(*iter3, face)) {
 				continue;
 			}
-			if ((face.normal * (m_pts[*itCheck] - m_pts[face.a])) > PLANE_DIST_TOL) {
+			if ((face.normal * (testPt - m_pts[face.a])) > PLANE_DIST_TOL) {
 				outside = true;
 				break;
 			}
@@ -316,15 +313,6 @@ bool convex_hull::get_edge_faces(index_pair edge, index_pair& faces)
 	return false;
 }
 
-bool convex_hull::get_edge_faces(index_pair edge, tri_face& face1, tri_face& face2)
-{
-	index_pair fPair;
-	if (get_edge_faces(edge, fPair)) {
-		return get_face(fPair.p, face1) && get_face(fPair.q, face2);
-	}
-	return false;
-}
-
 vec3 convex_hull::face_center(const tri_face& face)
 {
 	return (m_pts[face.a] + m_pts[face.b] + m_pts[face.c]) / 3;
@@ -355,15 +343,10 @@ void convex_hull::compute() {
 	{
 		ti = gQue.front();
 		gQue.pop();
-		if (!get_face(ti, cTri)) {
+		if (!get_face(ti, cTri) || !get_farthest_pt(cTri, fpt, fpi)) {
 			continue;
 		}
-		fpi = farthest_pt(cTri);
 		normal = cTri.normal;
-		if (fpi == -1) {
-			continue;
-		}
-		fpt = m_pts[fpi];
 		popQ.push(ti);
 
 		horizonIndices.clear();
@@ -384,7 +367,7 @@ void convex_hull::compute() {
 				if (!adjTri[ti].is_valid()) {
 					continue;
 				}
-				if (is_face_visible(adjTri[ti], fpt)) {
+				if (face_visible(adjTri[ti], fpt)) {
 					popQ.push(adjTri[ti].index);
 				}
 				else {
