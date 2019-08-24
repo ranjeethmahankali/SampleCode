@@ -81,15 +81,11 @@ struct tri_face {
 };
 
 struct index_pair_hash {
-	size_t operator()(const index_pair& pair) const noexcept {
-		return pair.hash();
-	}
+	size_t operator()(const index_pair&) const noexcept;
 };
 
 struct custom_size_t_hash {
-	size_t operator()(const size_t& n) const noexcept {
-		return n;
-	}
+	size_t operator()(const size_t&) const noexcept;
 };
 
 PINVOKE void Unsafe_ReleaseIntArray(int* arr);

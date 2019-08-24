@@ -203,3 +203,13 @@ bool index_pair::contains(size_t n) const
 {
 	return n != -1 && (n == p || n == q);
 }
+
+size_t index_pair_hash::operator()(const index_pair& pair) const noexcept
+{
+	return pair.hash();
+}
+
+size_t custom_size_t_hash::operator()(const size_t& n) const noexcept
+{
+	return n;
+}
