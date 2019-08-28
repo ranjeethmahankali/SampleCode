@@ -44,8 +44,8 @@ struct vec3 {
 	bool is_valid() const;
 	vec3 unit() const;
 
-	static vec3 sum(vec3* vecs, const size_t& nVecs);
-	static vec3 average(vec3* vecs, const size_t& nVecs);
+	static vec3 sum(const std::vector<vec3>& vecs);
+	static vec3 average(const std::vector<vec3>& vecs);
 };
 
 struct index_pair {
@@ -54,11 +54,9 @@ struct index_pair {
 	bool operator==(const index_pair) const;
 	bool operator!=(const index_pair) const;
 
-	index_pair(size_t i, size_t j)
-		: p(i), q(j) {}
+	index_pair(size_t i, size_t j);
 
-	index_pair()
-		: index_pair(-1, -1) {}
+	index_pair();
 
 	size_t hash() const;
 	void unset(size_t);
@@ -68,7 +66,7 @@ struct index_pair {
 
 struct tri_face {
 	static const tri_face unset;
-	size_t index;
+	size_t id;
 	size_t a, b, c;
 	vec3 normal;
 

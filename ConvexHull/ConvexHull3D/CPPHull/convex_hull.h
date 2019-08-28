@@ -14,13 +14,14 @@ private:
 	std::unordered_set<size_t, custom_size_t_hash, std::equal_to<size_t>> m_outsidePts;
 	std::unordered_map<index_pair, index_pair, index_pair_hash, std::equal_to<index_pair>> m_edgeFaceMap;
 
-	vec3 *m_pts, m_center;
+	std::vector<vec3> m_pts;
+	vec3 m_center;
 	size_t m_nPts;
 
 	void compute();
 	
 	void set_face(tri_face& tri);
-	tri_face pop_face(size_t index, index_pair edges[3],
+	tri_face pop_face(size_t id, index_pair edges[3],
 		tri_face adjTriangles[3]);
 	bool face_visible(const tri_face& tri, const vec3& pt) const;
 	double face_plane_dist(const tri_face& tri, const vec3& pt);
@@ -33,9 +34,8 @@ private:
 
 public:
 	convex_hull(double* pts, size_t nPts);
-	~convex_hull();
 
-	vec3 get_pt(size_t index) const;
+	vec3 get_pt(size_t id) const;
 	size_t num_faces() const;
 	void get_all_faces(int* triIndices);
 };

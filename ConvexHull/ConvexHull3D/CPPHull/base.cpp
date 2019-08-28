@@ -109,29 +109,31 @@ vec3 vec3::unit() const {
 	return is_zero() ? zero : vec3(x, y, z) / len();
 }
 
-vec3 vec3::sum(vec3* vecs, const size_t& nVecs) {
+vec3 vec3::sum(const std::vector<vec3>& vecs) {
 	vec3 sum = vec3::zero;
-	for (size_t i = 0; i < nVecs; i++)
+	auto iter = vecs.begin();
+	while (iter != vecs.end())
 	{
-		sum += vecs[i];
+		sum += *iter;
+		iter++;
 	}
 
 	return sum;
 }
 
-vec3 vec3::average(vec3* vecs, const size_t& nVecs) {
-	return sum(vecs, nVecs) / nVecs;
+vec3 vec3::average(const std::vector<vec3>& vecs) {
+	return sum(vecs) / vecs.size();
 }
 
 tri_face::tri_face() : tri_face::tri_face(-1, -1, -1, -1) { }
 
 tri_face::tri_face(size_t i, size_t v1, size_t v2, size_t v3)
-	: a(v1), b(v2), c(v3), index(i), normal(vec3::unset) {}
+	: id(i), a(v1), b(v2), c(v3), normal(vec3::unset) {}
 
 bool tri_face::is_valid() const {
 	// Normally we would check if the numbers are > -1. but because size_t is unsigned. -1 causes integer underflow
 	// resulting in a huge number whenever we assign -1 to a size_t type. so here we check the opposite i.e. <.
-	return index < -1 && a < -1 && b < -1 && c < -1 && a != b && b != c && c != a;
+	return id != -1 && a != -1 && b != -1 && c != -1 && a != b && b != c && c != a;
 }
 
 void tri_face::flip() {
@@ -153,7 +155,7 @@ index_pair tri_face::edge(char edgeIndex) const
 	case 2:
 		return index_pair(c, a);
 	default:
-		throw "Invalid edge index";
+		throw "Invalid edge id";
 	}
 }
 
@@ -170,6 +172,12 @@ bool index_pair::operator!=(const index_pair other) const
 {
 	return (p != other.p && p != other.q) || (q != other.p && q != other.q);
 }
+
+index_pair::index_pair(size_t i, size_t j)
+	: p(i), q(j) {}
+
+index_pair::index_pair()
+	: index_pair(-1, -1) {}
 
 size_t index_pair::hash() const
 {
