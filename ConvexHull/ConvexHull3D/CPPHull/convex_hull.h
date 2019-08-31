@@ -24,9 +24,9 @@ private:
 	tri_face pop_face(size_t id, index_pair edges[3],
 		tri_face adjTriangles[3]);
 	bool face_visible(const tri_face& tri, const vec3& pt) const;
-	double face_plane_dist(const tri_face& tri, const vec3& pt);
+	double face_plane_dist(const tri_face& tri, const vec3& pt) const;
 	bool get_farthest_pt(const tri_face& tri_face, vec3& pt, size_t& ptIndex);
-	void update_interior_points(const std::vector<size_t>& newFaceIndices, const std::vector<tri_face>& poppedFaces);
+	void update_exterior_points(const std::vector<tri_face>& newFaceIndices, const std::vector<tri_face>& poppedFaces);
 	void create_initial_simplex(size_t& triIndex);
 	bool get_face(size_t fi, tri_face& face);
 	bool get_edge_faces(index_pair edge, index_pair& faces);
@@ -37,7 +37,7 @@ public:
 
 	vec3 get_pt(size_t id) const;
 	size_t num_faces() const;
-	void get_all_faces(int* triIndices);
+	void copy_faces(int* triIndices);
 };
 
 PINVOKE void Unsafe_ComputeHull(double* pts, size_t numPoints,

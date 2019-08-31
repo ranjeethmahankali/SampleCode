@@ -76,6 +76,7 @@ struct tri_face {
 	bool is_valid() const;
 	void flip();
 	index_pair edge(char edgeIndex) const;
+	bool contains_vertex(size_t vertIndex) const;
 };
 
 struct index_pair_hash {

@@ -111,11 +111,9 @@ vec3 vec3::unit() const {
 
 vec3 vec3::sum(const std::vector<vec3>& vecs) {
 	vec3 sum = vec3::zero;
-	auto iter = vecs.begin();
-	while (iter != vecs.end())
+	for (const vec3& v : vecs)
 	{
-		sum += *iter;
-		iter++;
+		sum += v;
 	}
 
 	return sum;
@@ -157,6 +155,11 @@ index_pair tri_face::edge(char edgeIndex) const
 	default:
 		throw "Invalid edge id";
 	}
+}
+
+bool tri_face::contains_vertex(size_t vi) const
+{
+	return vi != -1 && (vi == a || vi == b || vi == c);
 }
 
 PINVOKE void Unsafe_ReleaseIntArray(int* arr) {
